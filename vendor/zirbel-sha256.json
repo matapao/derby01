@@ -1,0 +1,7 @@
+{
+  "owner": "@zirbel/core/sha256",
+  "source": "https://github.com/matapao/zirbel/blob/main/packages/core/src/sha256.ts",
+  "license": "MIT",
+  "sourceSha256": "af1b74423bc90c2155e3a1303e4ccdbba1f39810104007f494d3732f2fd9c049",
+  "changes": "Bundled without algorithm changes using the pinned esbuild version. Refresh with node tools/vendor-hash.ts PATH_TO_ZIRBEL."
+}

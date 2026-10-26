@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bots.schema.json",
+  "title": "derby01: bots",
+  "description": "The CPU fills every seat nobody takes (its players are called bots in the code). The host picks one of three levels on the setup screen; bots hit softer than people at every level.",
+  "type": "object",
+  "required": ["levels", "unjam", "rest"],
+  "additionalProperties": false,
+  "properties": {
+    "levels": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "description": "Easy, normal and hard, in that order (the screens send the level as 0, 1 or 2).",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "throttle",
+          "turn",
+          "wobble",
+          "react",
+          "burst",
+          "dmg",
+          "range",
+          "mech",
+          "coolAt"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 12,
+            "description": "The level on the setup screen."
+          },
+          "throttle": {
+            "type": "number",
+            "minimum": 0.3,
+            "maximum": 1,
+            "description": "How much throttle bot drivers use."
+          },
+          "turn": {
+            "type": "number",
+            "minimum": 0.5,
+            "maximum": 6,
+            "description": "How fast bot gunners swing their turret, in radians a second."
+          },
+          "wobble": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 8,
+            "description": "How far off a bot gunner's aim wanders, in metres."
+          },
+          "react": {
+            "type": "number",
+            "minimum": 0.05,
+            "maximum": 3,
+            "description": "Seconds a bot gunner takes to pick a new target."
+          },
+          "burst": {
+            "type": "number",
+            "minimum": 0.1,
+            "maximum": 5,
+            "description": "Seconds a bot gunner fires before a short pause."
+          },
+          "dmg": {
+            "type": "number",
+            "minimum": 0.1,
+            "maximum": 1,
+            "description": "A bot's paintballs do this share of a person's damage."
+          },
+          "range": {
+            "type": "number",
+            "minimum": 10,
+            "maximum": 150,
+            "description": "The farthest a bot gunner fires at, in metres."
+          },
+          "mech": {
+            "type": "number",
+            "minimum": 0.3,
+            "maximum": 4,
+            "description": "Bot mechanics take this many times a job's bot time (mechanic.json), and bot gunners as long to clear a jam."
+          },
+          "coolAt": {
+            "type": "number",
+            "minimum": 0.3,
+            "maximum": 1,
+            "description": "A bot gunner lets go of the trigger at this heat, before the gun overheats."
+          }
+        }
+      }
+    },
+    "unjam": {
+      "$ref": "common.schema.json#/$defs/seconds",
+      "description": "Seconds a bot gunner fiddles with a jam (times its level's mech)."
+    },
+    "rest": {
+      "$ref": "common.schema.json#/$defs/seconds",
+      "description": "Seconds a bot mechanic rests between jobs (times its level's mech)."
+    }
+  }
+}

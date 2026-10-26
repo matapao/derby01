@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "prefabs.schema.json",
+  "title": "derby01: prefabs",
+  "description": "Named groups of pieces, painted ground, markings and walls, built in their own frame (x to the left, z forward, metres from the middle) and placed in a town as one: data/town.json's prefabs list moves and turns them.",
+  "type": "object",
+  "required": ["prefabs"],
+  "additionalProperties": false,
+  "properties": {
+    "prefabs": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 100,
+      "description": "The prefabs. Ids must be unique; towns name them.",
+      "items": {
+        "type": "object",
+        "required": ["id", "about"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "$ref": "common.schema.json#/$defs/id", "description": "The prefab's id." },
+          "about": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240,
+            "description": "What it is, how big, and which way it faces."
+          },
+          "ground": {
+            "type": "array",
+            "maxItems": 20,
+            "description": "Painted ground.",
+            "items": { "$ref": "layout.schema.json#/$defs/ground", "description": "An area." }
+          },
+          "pieces": {
+            "type": "array",
+            "maxItems": 60,
+            "description": "Placed pieces.",
+            "items": { "$ref": "layout.schema.json#/$defs/placement", "description": "A piece." }
+          },
+          "markings": {
+            "type": "array",
+            "maxItems": 20,
+            "description": "Paint.",
+            "items": { "$ref": "layout.schema.json#/$defs/marking", "description": "A marking." }
+          },
+          "walls": {
+            "type": "array",
+            "maxItems": 20,
+            "description": "Hedges and low walls.",
+            "items": { "$ref": "layout.schema.json#/$defs/wall", "description": "A wall." }
+          },
+          "barriers": {
+            "type": "array",
+            "maxItems": 10,
+            "description": "Road barriers.",
+            "items": { "$ref": "layout.schema.json#/$defs/barrier", "description": "A barrier." }
+          }
+        }
+      }
+    }
+  }
+}

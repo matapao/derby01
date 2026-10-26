@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "drops.schema.json",
+  "title": "derby01: supply drops",
+  "description": "Fuel cans, spare tyres, rubber bumpers and windscreens turn up on the tarmac as a floating item with a ring and a beam of light. Drive over one to take it: with a mechanic aboard it goes into the spares, without one it is fitted at once. Where they may turn up is the town's drop zones (or anywhere paved); drop pads in the town are fixed spots.",
+  "type": "object",
+  "required": ["max", "atStart", "every", "reach", "keep", "types"],
+  "additionalProperties": false,
+  "properties": {
+    "max": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 20,
+      "description": "The most drops lying about at once."
+    },
+    "atStart": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 20,
+      "description": "Drops placed when a round starts. At most max."
+    },
+    "every": {
+      "$ref": "common.schema.json#/$defs/seconds",
+      "description": "Seconds between new drops: [shortest, longest]."
+    },
+    "reach": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 6,
+      "description": "How close (m) a car's middle must come to take a drop."
+    },
+    "keep": {
+      "type": "object",
+      "description": "How far a new drop is kept from things, in metres.",
+      "required": ["edge", "obstacles", "cars", "drops"],
+      "additionalProperties": false,
+      "properties": {
+        "edge": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 20,
+          "description": "From the edge of the town."
+        },
+        "obstacles": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10,
+          "description": "From buildings, posts and trees."
+        },
+        "cars": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 40,
+          "description": "From any car, so nobody gets one dropped in their lap."
+        },
+        "drops": { "type": "number", "minimum": 0, "maximum": 60, "description": "From other drops." }
+      }
+    },
+    "types": {
+      "type": "object",
+      "description": "The four kinds of drop. Which kinds exist, and what each gives, are the game's (the screens send them by number); their colours and letters are yours.",
+      "required": ["fuel", "tyre", "bumper", "glass"],
+      "additionalProperties": false,
+      "properties": {
+        "fuel": { "$ref": "#/$defs/type", "description": "A fuel can: +1 can, or fills the tank by a can." },
+        "tyre": {
+          "$ref": "#/$defs/type",
+          "description": "A spare tyre: +1 spare, or replaces the worst tyre."
+        },
+        "bumper": {
+          "$ref": "#/$defs/type",
+          "description": "Bumpers: +3 pieces, or fitted where they matter most."
+        },
+        "glass": {
+          "$ref": "#/$defs/type",
+          "description": "A windscreen: +1 spare, or replaces a cracked windshield."
+        }
+      }
+    }
+  },
+  "$defs": {
+    "type": {
+      "type": "object",
+      "required": ["colour", "ui", "letter"],
+      "additionalProperties": false,
+      "properties": {
+        "colour": {
+          "$ref": "common.schema.json#/$defs/colour",
+          "description": "Its ring and beam of light."
+        },
+        "ui": {
+          "$ref": "common.schema.json#/$defs/colour",
+          "description": "Its colour on the HUD and in the mechanic's spares."
+        },
+        "letter": { "type": "string", "pattern": "^[A-Z]$", "description": "Its letter on the radar screen." }
+      }
+    }
+  }
+}

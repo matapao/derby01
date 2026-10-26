@@ -1,0 +1,526 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "damage.schema.json",
+  "title": "derby01: damage",
+  "description": "How hits hurt. A hit lands in a zone of the car (front, rear, or one of four quarters); the rubber bumper there takes a share; what is left dents the bodywork, cracks the glass, wears the parts behind it and comes off the chassis health. dv is how hard the knock was, as a change of speed in m/s.",
+  "type": "object",
+  "required": [
+    "zones",
+    "crash",
+    "wall",
+    "landing",
+    "kick",
+    "bumpers",
+    "fatigue",
+    "kitGun",
+    "parts",
+    "bodywork",
+    "credit"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "zones": {
+      "type": "object",
+      "description": "Damage factor by where the car is hit: ramming with your front hurts you least.",
+      "required": ["front", "rear", "lf", "rf", "lr", "rr"],
+      "additionalProperties": false,
+      "properties": {
+        "front": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 3,
+          "description": "The nose."
+        },
+        "rear": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 3,
+          "description": "The tail."
+        },
+        "lf": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 3,
+          "description": "Left side, front half."
+        },
+        "rf": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 3,
+          "description": "Right side, front half."
+        },
+        "lr": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 3,
+          "description": "Left side, rear half."
+        },
+        "rr": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 3,
+          "description": "Right side, rear half."
+        }
+      }
+    },
+    "crash": {
+      "type": "object",
+      "description": "Two cars colliding: each takes (dv - threshold) \u00d7 per.",
+      "required": ["threshold", "per"],
+      "additionalProperties": false,
+      "properties": {
+        "threshold": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 15,
+          "description": "Knocks softer than this (m/s) don't hurt."
+        },
+        "per": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10,
+          "description": "Damage per m/s above the threshold."
+        }
+      }
+    },
+    "wall": {
+      "type": "object",
+      "description": "A car hitting the edge, a building or a post: (dv - threshold) \u00d7 per.",
+      "required": ["ignore", "threshold", "per", "props"],
+      "additionalProperties": false,
+      "properties": {
+        "ignore": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10,
+          "description": "Knocks softer than this (m/s) are not even felt."
+        },
+        "threshold": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 20,
+          "description": "Knocks softer than this (m/s) don't hurt."
+        },
+        "per": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10,
+          "description": "Damage per m/s above the threshold."
+        },
+        "props": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 2,
+          "description": "Factor for posts, trees and other round things that don't give way."
+        }
+      }
+    },
+    "landing": {
+      "type": "object",
+      "description": "Coming down hard after a jump (speeds are how fast the car falls, m/s).",
+      "required": [
+        "knock",
+        "hurtAbove",
+        "hurt",
+        "radarAbove",
+        "radar",
+        "tyresAbove",
+        "tyres",
+        "axleAbove",
+        "axleChance"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "knock": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 30,
+          "description": "Landings harder than this shake the crew and throw dust."
+        },
+        "hurtAbove": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 40,
+          "description": "Landings harder than this hurt the chassis."
+        },
+        "hurt": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10,
+          "description": "Chassis damage per m/s above hurtAbove."
+        },
+        "radarAbove": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 40,
+          "description": "Landings harder than this shake the radar."
+        },
+        "radar": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10,
+          "description": "Radar damage per m/s above radarAbove."
+        },
+        "tyresAbove": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 40,
+          "description": "Landings harder than this wear all four tyres."
+        },
+        "tyres": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 20,
+          "description": "Tyre wear per m/s above tyresAbove (a tyre has 100)."
+        },
+        "axleAbove": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 40,
+          "description": "Landings harder than this may break an axle."
+        },
+        "axleChance": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Chance for each axle."
+        }
+      }
+    },
+    "kick": {
+      "type": "object",
+      "description": "How a knock throws the car about: it rolls and pitches away, hops on a hard one, and its tyres skate for a moment.",
+      "required": [
+        "min",
+        "roll",
+        "pitch",
+        "stun",
+        "stunMax",
+        "radarAbove",
+        "radar",
+        "liftAbove",
+        "lift",
+        "liftMax"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "min": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10,
+          "description": "Knocks softer than this (m/s) don't throw the car."
+        },
+        "roll": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Body roll per m/s of a side knock (looks only)."
+        },
+        "pitch": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Body pitch per m/s of a knock from the front or back (looks only)."
+        },
+        "stun": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 0.2,
+          "description": "Seconds the tyres skate per m/s of the knock."
+        },
+        "stunMax": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 2,
+          "description": "The longest they skate, in seconds."
+        },
+        "radarAbove": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 40,
+          "description": "Knocks harder than this shake the radar loose."
+        },
+        "radar": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10,
+          "description": "Radar damage per m/s above radarAbove."
+        },
+        "liftAbove": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 40,
+          "description": "Knocks harder than this lift the car off the ground."
+        },
+        "lift": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 2,
+          "description": "Upward speed per m/s above liftAbove."
+        },
+        "liftMax": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10,
+          "description": "The fastest a knock lifts the car, in m/s."
+        }
+      }
+    },
+    "bumpers": {
+      "type": "object",
+      "description": "How much of a hit the rubber takes where it is hit (it takes less as it wears).",
+      "required": ["crash", "wall", "gun", "wear", "lowHit"],
+      "additionalProperties": false,
+      "properties": {
+        "crash": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Share of a crash between cars."
+        },
+        "wall": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Share of a hit on a wall or a building."
+        },
+        "gun": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Share of a paintball that hits the rubber."
+        },
+        "wear": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 5,
+          "description": "The bumper loses this many times what it soaks up."
+        },
+        "lowHit": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1.5,
+          "description": "Paintballs only hit the rubber below this height, in metres."
+        }
+      }
+    },
+    "fatigue": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Metal fatigue: this share of every hit can never be repaired."
+    },
+    "kitGun": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Paintballs wear the kit's add-on parts at this share of their damage."
+    },
+    "parts": {
+      "type": "object",
+      "description": "What a hit does to the parts behind it: the engine at the front, the fuel tank at the back, the tyres, the axles and the guns.",
+      "required": [
+        "engine",
+        "leakGun",
+        "leakCrash",
+        "leakCrashAbove",
+        "tyreGun",
+        "tyreCrash",
+        "tyreCrashAbove",
+        "axleAbove",
+        "axleChance",
+        "gunJamAbove",
+        "gunJamChance",
+        "fireLeakGun"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "engine": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 3,
+          "description": "Engine damage per point of damage to the front."
+        },
+        "leakGun": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 0.5,
+          "description": "Chance a paintball in the back holes the fuel tank."
+        },
+        "leakCrash": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Chance a hard knock in the back holes the tank."
+        },
+        "leakCrashAbove": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 30,
+          "description": "How hard (m/s) that knock must be."
+        },
+        "tyreGun": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 50,
+          "description": "Tyre wear from a paintball near a wheel, low down (a tyre has 100)."
+        },
+        "tyreCrash": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 20,
+          "description": "Tyre wear per m/s of a knock near a wheel, above tyreCrashAbove."
+        },
+        "tyreCrashAbove": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 30,
+          "description": "Knocks softer than this (m/s) don't wear the tyres."
+        },
+        "axleAbove": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 40,
+          "description": "Knocks at either end harder than this (m/s) may break that axle."
+        },
+        "axleChance": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Chance they do."
+        },
+        "gunJamAbove": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 40,
+          "description": "Crashes harder than this (m/s) may jam the gun at that end."
+        },
+        "gunJamChance": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Chance they do."
+        },
+        "fireLeakGun": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 0.5,
+          "description": "Chance a paintball sets a leaking tank on fire."
+        }
+      }
+    },
+    "credit": {
+      "type": "object",
+      "description": "Who gets the credit when a car hits a wall or is wrecked after a hit.",
+      "required": ["hit", "wreck"],
+      "additionalProperties": false,
+      "properties": {
+        "hit": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10,
+          "description": "Seconds after a hit in which wall damage and a lost radar still count for whoever hit it."
+        },
+        "wreck": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 15,
+          "description": "Seconds after a hit in which a wreck still counts for whoever hit it."
+        }
+      }
+    },
+    "bodywork": {
+      "type": "object",
+      "description": "Collision damage accumulates on each panel after bumper absorption. Panels first loosen, then a later hard collision can release them after a visible delay. Paintballs do not loosen panels. Wrecks shed a bounded set of remaining parts.",
+      "required": [
+        "panelDamage",
+        "panelImpact",
+        "panelHit",
+        "wheelImpact",
+        "wheelHit",
+        "wheelRadius",
+        "wheelHeight",
+        "wheelTyreHp",
+        "wreckPanels",
+        "wreckWheels",
+        "panelLooseDamage",
+        "panelLooseTime"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "panelDamage": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 100,
+          "description": "Collision wear required before a later hard hit can release an already loose panel."
+        },
+        "panelImpact": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 30,
+          "description": "Minimum collision speed change in m/s to release a panel."
+        },
+        "panelHit": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 30,
+          "description": "Minimum damage after bumper absorption on the releasing hit."
+        },
+        "wheelImpact": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 40,
+          "description": "Minimum collision speed change in m/s to tear away a damaged wheel."
+        },
+        "wheelHit": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 30,
+          "description": "Minimum damage after bumper absorption on the wheel impact."
+        },
+        "wheelRadius": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 1.5,
+          "description": "Maximum horizontal distance in metres from the impact to a wheel."
+        },
+        "wheelHeight": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 1.5,
+          "description": "Maximum impact height in metres above the car origin for wheel loss."
+        },
+        "wheelTyreHp": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Tyre health at or below which a hard hit may tear the wheel away. A flat tyre or broken axle also qualifies."
+        },
+        "wreckPanels": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 6,
+          "description": "Maximum remaining panels released when the car is wrecked; front doors have priority."
+        },
+        "wreckWheels": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4,
+          "description": "Maximum remaining wheels released when the car is wrecked."
+        },
+        "panelLooseDamage": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 100,
+          "description": "Collision wear required to loosen the struck panel before it can detach."
+        },
+        "panelLooseTime": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 5,
+          "description": "Minimum simulation seconds spent loose before a later qualifying collision can detach the panel."
+        }
+      }
+    }
+  }
+}

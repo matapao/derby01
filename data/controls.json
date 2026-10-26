@@ -1,0 +1,6 @@
+{
+  "mouse": 0.0022,
+  "keys": { "yaw": 1.7, "pitch": 1.1 },
+  "pad": { "yaw": 2.8, "pitch": 1.8, "deadzone": 0.16 },
+  "flick": 18
+}

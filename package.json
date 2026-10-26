@@ -1,0 +1,37 @@
+{
+  "name": "derby01",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A paintball demolition derby in three.js: four cars, four seats in each, bots in the empty ones.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/matapao/derby01.git"
+  },
+  "type": "module",
+  "scripts": {
+    "build": "node tools/build.ts",
+    "zirbel": "node tools/build.ts --zirbel",
+    "dev": "node tools/build.ts --serve",
+    "check": "npm run check:standards && npm run format:check && tsc -p . && tsc -p tools && tsc -p tsconfig.boundaries.json && tsc -p tsconfig.gameplay.json",
+    "verify": "npm run check && npm test && npm run build && npm run zirbel",
+    "test": "node --test --test-concurrency=1 \"test/*.test.ts\"",
+    "format": "node docs/engineering/style.mjs --write",
+    "format:check": "node docs/engineering/style.mjs",
+    "check:standards": "node docs/engineering/check.mjs"
+  },
+  "dependencies": {
+    "three": "0.186.1"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "@types/three": "0.186.0",
+    "@zirbel/engineering": "file:vendor/zirbel-engineering-1.0.0.tgz",
+    "esbuild": "0.28.2",
+    "prettier": "3.9.10",
+    "typescript": "7.0.2"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}

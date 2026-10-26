@@ -1,0 +1,123 @@
+{
+  "prefabs": [
+    {
+      "id": "kiosk-stop",
+      "about": "The kiosk with its four striped bollards in a row in front of it (towards its yaw).",
+      "pieces": [
+        { "piece": "kiosk", "x": 0, "z": 0 },
+        { "piece": "bollard", "x": -1.2, "z": 1.7 },
+        { "piece": "bollard", "x": -0.4, "z": 1.7 },
+        { "piece": "bollard", "x": 0.4, "z": 1.7 },
+        { "piece": "bollard", "x": 1.2, "z": 1.7 }
+      ]
+    },
+    {
+      "id": "rowan-island",
+      "about": "A kerbed strip of grass 4.4 by 14 m along its yaw, with two rowans and a lamp post at the far end.",
+      "ground": [
+        {
+          "surface": "grass",
+          "kerb": true,
+          "poly": [
+            [-2.2, -7],
+            [2.2, -7],
+            [2.2, 7],
+            [-2.2, 7]
+          ]
+        }
+      ],
+      "pieces": [
+        { "piece": "rowan", "x": 0, "z": -4.5 },
+        { "piece": "rowan", "x": 0, "z": 1.5 },
+        { "piece": "lamp", "x": 0, "z": 5.8 }
+      ]
+    },
+    {
+      "id": "round-bed",
+      "about": "A round kerbed bed of grass, 8 m across, with one big rowan in the middle: something to drift round.",
+      "ground": [
+        {
+          "surface": "grass",
+          "kerb": true,
+          "poly": [
+            [4, 0],
+            [3.7, 1.53],
+            [2.83, 2.83],
+            [1.53, 3.7],
+            [0, 4],
+            [-1.53, 3.7],
+            [-2.83, 2.83],
+            [-3.7, 1.53],
+            [-4, 0],
+            [-3.7, -1.53],
+            [-2.83, -2.83],
+            [-1.53, -3.7],
+            [0, -4],
+            [1.53, -3.7],
+            [2.83, -2.83],
+            [3.7, -1.53]
+          ]
+        }
+      ],
+      "pieces": [{ "piece": "rowan", "x": 0, "z": 0 }]
+    },
+    {
+      "id": "parking-row",
+      "about": "A double row of 14 parking bays, 10 by 17.5 m along its yaw, with a lamp post at each end.",
+      "markings": [{ "type": "bays", "x": 0, "z": 0, "yaw": 0, "n": 7, "rows": 1 }],
+      "pieces": [
+        { "piece": "lamp", "x": 0, "z": -10.35 },
+        { "piece": "lamp", "x": 0, "z": 10.35 }
+      ]
+    },
+    {
+      "id": "jump",
+      "about": "A jump along its yaw: a kicker ramp, a 6 m gap, and a landing ramp sloping away. Hit it fast.",
+      "pieces": [
+        { "piece": "ramp", "x": 0, "z": -6, "yaw": 0, "w": 5, "l": 6, "h": 1.4 },
+        { "piece": "ramp", "x": 0, "z": 7, "yaw": 3.1416, "w": 5, "l": 8, "h": 1.4 }
+      ]
+    },
+    {
+      "id": "chicane",
+      "about": "Two low concrete walls across alternate halves of a 7 m street, 12 m apart: slow down or bounce.",
+      "walls": [
+        {
+          "kind": "wall",
+          "line": [
+            [3.6, -6],
+            [0.2, -6]
+          ]
+        },
+        {
+          "kind": "wall",
+          "line": [
+            [-3.6, 6],
+            [-0.2, 6]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "drop-yard",
+      "about": "Three drop pads in a triangle, 8 m apart, inside a kerbed square of pavement.",
+      "ground": [
+        {
+          "surface": "pave",
+          "kerb": true,
+          "poly": [
+            [-7, -7],
+            [7, -7],
+            [7, 7],
+            [-7, 7]
+          ]
+        }
+      ],
+      "pieces": [
+        { "piece": "drop-pad", "x": 0, "z": 4.6 },
+        { "piece": "drop-pad", "x": -4, "z": -2.3 },
+        { "piece": "drop-pad", "x": 4, "z": -2.3 }
+      ]
+    }
+  ]
+}

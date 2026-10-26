@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "points.schema.json",
+  "title": "derby01: points",
+  "description": "What scores. Every car scores for its team over the whole match: damage to other cars, wrecks, the radar headshot, burns (holding a tyre-smoking slide), and the last car standing. Speed cameras pay too (their piece in pieces.json). No single award may be over 5000: the screens send awards up to 5000.",
+  "type": "object",
+  "required": ["damage", "wreck", "radarHit", "radar", "win", "burn"],
+  "additionalProperties": false,
+  "properties": {
+    "damage": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 10,
+      "description": "Points per point of damage done to a car of another team: paintballs, rams, and shoving it into a wall."
+    },
+    "wreck": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 5000,
+      "description": "Wrecking a car of another team."
+    },
+    "radarHit": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Every paintball on an enemy's roof radar."
+    },
+    "radar": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 5000,
+      "description": "Knocking an enemy's radar off (shot off, rammed loose or shaken off): the HEADSHOT."
+    },
+    "win": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 5000,
+      "description": "The last car standing at the end of a round."
+    },
+    "burn": {
+      "type": "object",
+      "description": "Burns: throw the car into a slide on purpose (the handbrake, or full lock on full throttle at speed) and hold the drift or donut. Points = rate × t + grow × t², banked when the slide ends; a hard knock before that loses them.",
+      "required": ["min", "rate", "grow", "max", "grace", "crash", "announce"],
+      "additionalProperties": false,
+      "properties": {
+        "min": {
+          "type": "number",
+          "minimum": 0.2,
+          "maximum": 5,
+          "description": "Seconds a slide must last to count."
+        },
+        "rate": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 60,
+          "description": "Points per second of the burn."
+        },
+        "grow": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 15,
+          "description": "Points per second squared: the longer it lasts, the faster it grows."
+        },
+        "max": {
+          "type": "number",
+          "minimum": 2,
+          "maximum": 15,
+          "description": "Seconds after which a burn banks itself and starts counting again."
+        },
+        "grace": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 2,
+          "description": "Seconds a slide may straighten out before the burn ends."
+        },
+        "crash": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 20,
+          "description": "A knock harder than this (m/s) during a burn loses it."
+        },
+        "announce": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 5000,
+          "description": "A banked burn worth at least this is called out in everyone's feed."
+        }
+      }
+    }
+  }
+}

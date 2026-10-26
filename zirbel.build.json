@@ -1,0 +1,315 @@
+{
+  "about": "derby01 is a paintball demolition derby: two to eight cars, one per team, four seats in each. The driver drives, two gunners work remote paintball turrets on the hood and the trunk, and the mechanic keeps the car running with quick mini-games. The CPU takes every seat nobody does. Rounds are played in a small town that grows with the cars: a ring road you can lap, an open square, office blocks, a park and a car park. Points come from damage, wrecks, shooting radars off (the headshot), holding slides (burns) and being the last car standing; they add up over a match. One screen hosts the round, the others draw it. Everything you can change is data in data/: the town as a layout of pieces (town), the piece catalogue (pieces) and prefabs, the kits (how each car drives and what it wears), the car, the guns, damage, points, the mechanic's jobs, supply drops, bots, physics, rounds, controls and the town generator's recipe. A new revision of the data is used from the next round, by every screen alike.",
+  "feel": [
+    "Two to eight cars, one per team, four seats each (driver, hood gunner, trunk gunner, mechanic); the CPU fills the empty seats.",
+    "Paintball, not guns: hits splat in the team's colour, nothing burns or bleeds, and a wrecked car goes off like a party popper.",
+    "Arcade handling: kits differ a little and fairly, and what one does better it pays for somewhere else.",
+    "Fat rubber bumpers and dodgem bounces: crashes are fun, the car falls apart bit by bit, and the mechanic can patch most of it.",
+    "Every seat has a job worth doing; a mechanic's job is a mini-game of a few seconds.",
+    "The town is a believable small Nordic town: brick and white offices, rowans, lamp posts, a fjord beyond. No brands, logos or real people's names anywhere.",
+    "Rounds last a few minutes and the next starts by itself; points add up over the match.",
+    "Short plain words on screen, labels in capitals.",
+    "It runs on phones: keep the town within the budgets and the data small."
+  ],
+  "blocks": [
+    {
+      "id": "town",
+      "file": "data/town.json",
+      "schema": "data/layout.schema.json",
+      "about": "A town to play in when rounds.map is town (otherwise each match gets a generated town sized for its cars): the edge, painted ground, streets and markings, placed pieces and prefabs, walls, optional start slots, drop zones and the scenery outside. The generator wrote it from map number 8411 for four cars.",
+      "how": [
+        "Move a piece: change its x and z (metres; x east, z south). Turn it: yaw in radians, 0 faces south.",
+        "Add a ramp: put {\"piece\": \"ramp\", \"x\": …, \"z\": …, \"yaw\": …, \"w\": 5, \"l\": 6, \"h\": 1.2} on open tarmac, its yaw the way cars drive up it; or place the prefab jump.",
+        "Play it: set map to town in rounds. Fixed start slots: add spawns (up to eight; any more cars start at random spots) on clear tarmac inside the edge, at least 5 m apart; check() tells you when something is in the way or a slot can't reach the ring road.",
+        "Drops land anywhere paved unless you add zones of kind drops (or drop pads)."
+      ]
+    },
+    {
+      "id": "pieces",
+      "file": "data/pieces.json",
+      "schema": "data/pieces.schema.json",
+      "ids": "/pieces/*/id",
+      "about": "The catalogue of things towns are built from: each piece is an asset, a simplified collider and behaviour components (solid, breakable, ramp, drop pad) with their parameters.",
+      "how": [
+        "Make posts harder to knock over: raise breakable.speed on the piece.",
+        "Add a piece: copy one, give it a new id, an asset from the town package and the components it needs."
+      ]
+    },
+    {
+      "id": "prefabs",
+      "file": "data/prefabs.json",
+      "schema": "data/prefabs.schema.json",
+      "ids": "/prefabs/*/id",
+      "about": "Named groups of pieces, ground, markings and walls, placed in a town as one (the town's prefabs list).",
+      "how": [
+        "Place one: add {\"prefab\": \"jump\", \"x\": …, \"z\": …, \"yaw\": …} to the town's prefabs.",
+        "Make one: list its pieces in its own frame, x to its left and z forward from its middle."
+      ]
+    },
+    {
+      "id": "kits",
+      "file": "data/kits.json",
+      "schema": "data/kits.schema.json",
+      "ids": "/kits/*/id",
+      "about": "Mod kits: how each car drives (handling factors on the stock car) and the add-on parts it wears, by damage zone, with the words the setup screen shows.",
+      "how": [
+        "Add a kit: copy one, give it a new id and name, change its handling a little each way, and build its parts from the kit-parts shapes and materials.",
+        "Keep kits fair: if a kit grips better, make it bruise easier or turn slower."
+      ]
+    },
+    {
+      "id": "car",
+      "file": "data/car.json",
+      "schema": "data/car.schema.json",
+      "about": "What every car has: health and weight, the seats' names, how far the turrets swing, the roof radar, the rubber bumpers and the lights.",
+      "how": ["Longer rounds: raise hp (at most 100) or the bumpers' hp."]
+    },
+    {
+      "id": "guns",
+      "file": "data/guns.json",
+      "schema": "data/guns.schema.json",
+      "about": "The paintball markers: rate, damage, spread, ball speed and drop, heat, overheating and jams.",
+      "how": ["A gun that overheats sooner: raise heat. One that cools faster: raise cool."]
+    },
+    {
+      "id": "points",
+      "file": "data/points.json",
+      "schema": "data/points.schema.json",
+      "about": "What scores: damage, wrecks, radar hits and headshots, burns (held slides) and the round win.",
+      "how": ["Make burns pay more: raise burn.rate or burn.grow; no single award may pass 5000."]
+    },
+    {
+      "id": "damage",
+      "file": "data/damage.json",
+      "schema": "data/damage.schema.json",
+      "about": "How hits hurt: by zone, crashes, walls, landings, how knocks throw the car, the bumpers' share, and what breaks behind the bodywork.",
+      "how": ["Softer crashes: raise crash.threshold or lower crash.per."]
+    },
+    {
+      "id": "mechanic",
+      "file": "data/mechanic.json",
+      "schema": "data/mechanic.schema.json",
+      "about": "The car's systems (fuel, fire, tyres, broken parts), the spares, the mechanic's jobs and the tuning of each mini-game.",
+      "how": [
+        "Play a job with another game: change its jobs.<kind>.game.",
+        "Make a game quicker: lower its taps, hits or knocks, or raise its fill rate."
+      ]
+    },
+    {
+      "id": "drops",
+      "file": "data/drops.json",
+      "schema": "data/drops.schema.json",
+      "about": "Supply drops: how many, how often, how close a car must come, and their words and colours.",
+      "how": ["More drops: raise max and atStart, or shorten every."]
+    },
+    {
+      "id": "bots",
+      "file": "data/bots.json",
+      "schema": "data/bots.schema.json",
+      "about": "The three bot levels (easy, normal, hard): how they drive, aim, fire and fix.",
+      "how": ["Kinder hard bots: lower levels[2].dmg or raise its wobble."]
+    },
+    {
+      "id": "physics",
+      "file": "data/physics.json",
+      "schema": "data/physics.schema.json",
+      "about": "How the stock car drives and bounces: engine, nitro, drag, grip, steering and collisions. Kits scale these.",
+      "how": ["Faster cars: raise engine.top (29 m/s is about 104 km/h)."]
+    },
+    {
+      "id": "rounds",
+      "file": "data/rounds.json",
+      "schema": "data/rounds.schema.json",
+      "about": "Round flow: the countdown, the pause between rounds, and whether rounds use data/town.json or a town generated for the cars.",
+      "how": ["Play data/town.json: set map to town. Towns sized for the cars again: set it to generated."]
+    },
+    {
+      "id": "generator",
+      "file": "data/generator.json",
+      "schema": "data/generator.schema.json",
+      "about": "The town generator's recipe (used when rounds.map is generated): how much town each car gets, the blocks and streets, the square, the office, buildings, the park, trees and lamp posts, and which pieces it uses.",
+      "how": [
+        "Roomier towns: raise perCar (square metres of town per car).",
+        "Fewer lamp posts: widen lamps.every."
+      ]
+    },
+    {
+      "id": "teams",
+      "file": "data/teams.json",
+      "schema": "data/teams.schema.json",
+      "about": "The team colours: the car's paint and the brighter colour of its paintballs and HUD.",
+      "how": ["Keep every team's ui colour different: it tells the screens whose paint is whose."]
+    },
+    {
+      "id": "controls",
+      "file": "data/controls.json",
+      "schema": "data/controls.schema.json",
+      "about": "How fast the turrets turn for mouse, keys and gamepads.",
+      "how": ["Slower mouse aiming: lower mouse."]
+    }
+  ],
+  "assets": "assets/assets.json",
+  "budgets": { "dataBytes": 262144, "pieces": 1500, "triangles": 200000 },
+  "look": "src/agent/look.ts",
+  "check": "src/agent/check.ts",
+  "play": "src/agent/play.ts",
+  "apply": "round",
+  "review": "creator",
+  "build": {
+    "entry": "src/main.ts",
+    "html": "index.html",
+    "static": ["assets/**", "data/**"],
+    "external": ["/zirbel-net.js"],
+    "provided": { "three": "0.180.0" }
+  },
+  "checks": { "types": "tsconfig.json", "tests": "test/*.test.ts" },
+  "code": [
+    {
+      "path": "src/net/**",
+      "editable": false,
+      "why": "The wire format every screen shares, and the host's checks on everything players send."
+    },
+    {
+      "path": "src/agent/**",
+      "editable": false,
+      "why": "How agents play, see and check the game: its fairness limits live here."
+    },
+    {
+      "path": "src/blocks/**",
+      "editable": false,
+      "why": "Reads and validates the blocks the same way the host does."
+    },
+    {
+      "path": "src/town/**",
+      "editable": false,
+      "why": "The town as data: the layout format and the colliders every screen and agent derives from it, in an order the wire relies on."
+    },
+    { "path": "vendor/**", "editable": false, "why": "A copy of zirbel-net's types." },
+    { "path": "tools/**", "editable": false, "why": "The build." },
+    {
+      "path": "src/main.ts",
+      "about": "Loads the modules in order and boots the game.",
+      "editable": false,
+      "why": "The boot order matters: modules import each other in circles."
+    },
+    {
+      "path": "src/data.ts",
+      "about": "The live data: the blocks as built, and a revision put in place before a round.",
+      "editable": false,
+      "why": "Every screen and the host's agents must load a round's data the same way, and refuse a block that doesn't fit its schema the same way."
+    },
+    {
+      "path": "src/flow.ts",
+      "about": "The setup screen, rounds (start, countdown, end, next), the main loop and the boot.",
+      "editable": true,
+      "hooks": ["startRound() builds a round from the setup; checkRoundEnd() decides it."]
+    },
+    {
+      "path": "src/physics.ts",
+      "about": "Car physics, collisions and damage.",
+      "editable": true,
+      "hooks": [
+        "hitCar(car, amount, source, zone, cause) is the one way to hurt a car; damageCar() takes chassis damage directly."
+      ]
+    },
+    {
+      "path": "src/car.ts",
+      "about": "The game state (G), building a car (turrets, bumpers, crew, number plates) and drawing it.",
+      "editable": true
+    },
+    {
+      "path": "src/kits.ts",
+      "about": "Builds a car's kit from data/kits.json and knocks its parts off.",
+      "editable": true
+    },
+    {
+      "path": "src/combat.ts",
+      "about": "Paintball markers and the balls in flight: aiming, lofting, heat, jams, hits.",
+      "editable": true
+    },
+    {
+      "path": "src/control.ts",
+      "about": "Keyboard, mouse and gamepad input; seat changes; the bots' driving and aiming.",
+      "editable": true,
+      "hooks": ["botDrive(b, dt), botGun(b, dt): what a bot does each frame."]
+    },
+    {
+      "path": "src/touch.ts",
+      "about": "Touch controls for phones and tablets, in every seat: the sticks, pedals and buttons on the screen.",
+      "editable": true
+    },
+    {
+      "path": "src/mechanic.ts",
+      "about": "Car systems, the mechanic's job list and the mini-games, and the mechanic's dashboard.",
+      "editable": true,
+      "hooks": [
+        "GAMES: a mini-game is { help, init, update, draw }; update returns true when the job is done."
+      ]
+    },
+    {
+      "path": "src/score.ts",
+      "about": "Points, awards and burns.",
+      "editable": true,
+      "hooks": ["award(car, points, label) gives a car's team points and pops them up for its crew."]
+    },
+    {
+      "path": "src/drops.ts",
+      "about": "Supply drops: where they land (drop pads, drop zones, else anywhere paved), what they give.",
+      "editable": true
+    },
+    {
+      "path": "src/breakables.ts",
+      "about": "Lamp posts, trees and bollards that give way.",
+      "editable": true
+    },
+    { "path": "src/radar.ts", "about": "The roof radar and the radar screen.", "editable": true },
+    {
+      "path": "src/layout.ts",
+      "about": "The town generator: a town for a map number and a number of cars, from data/generator.json.",
+      "editable": true,
+      "hooks": [
+        "generateLayout(seed, cars, recipe) returns a plan; src/town/from-plan.ts makes it a layout. Every screen and the agents' modules run the same one, so a change shows everywhere at once."
+      ]
+    },
+    {
+      "path": "src/arena.ts",
+      "about": "Builds a town in 3D from its layout: the painted ground, each placed piece as its asset looks (buildings, trees, lamps, street furniture), ramps, drop pads, walls, the edge and the scenery.",
+      "editable": true
+    },
+    {
+      "path": "src/world.ts",
+      "about": "Renderer, sky, sun, the edge of the town, ramp heights, the bots' waypoints, surfaces.",
+      "editable": true
+    },
+    {
+      "path": "src/paint.ts",
+      "about": "Paint splats, the windshield's wipers and cracks.",
+      "editable": true
+    },
+    {
+      "path": "src/fx.ts",
+      "about": "Particles, debris, skids, confetti, flames and every sound.",
+      "editable": true
+    },
+    {
+      "path": "src/sharedfx.ts",
+      "about": "What crashes, wrecks, shots and awards look and sound like on every screen.",
+      "editable": true,
+      "hooks": ["A new shared effect needs an id and a codec in src/net (ask the creator)."]
+    },
+    { "path": "src/views.ts", "about": "Cameras, split screen and the HUD.", "editable": true },
+    {
+      "path": "src/carpreview.ts",
+      "about": "The little turning car beside each car on the setup screen.",
+      "editable": true
+    },
+    { "path": "src/core.ts", "about": "Helpers, the car model loader and its materials.", "editable": true },
+    { "path": "index.html", "about": "The page: menu, setup and HUD markup and styles.", "editable": true },
+    {
+      "path": "src/math.ts",
+      "about": "Small pure helpers (clamp, lerp, damp, wrapPi).",
+      "editable": false,
+      "why": "The generator and the agents' modules use them too."
+    }
+  ]
+}

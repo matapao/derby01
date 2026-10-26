@@ -1,0 +1,2062 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="theme-color" content="#07081a" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self'; worker-src blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; media-src 'self' blob: https://opengameart.org; base-uri 'none'; form-action 'none'; object-src 'none'"
+    />
+    <title>derby01</title>
+    <link rel="icon" href="data:," />
+    <style>
+      /* The fonts travel with the game (SIL Open Font License, see assets/fonts). */
+      @font-face {
+        font-family: 'Bungee';
+        font-weight: 400;
+        font-display: swap;
+        src: url(assets/fonts/Bungee-400.woff2) format('woff2');
+      }
+      @font-face {
+        font-family: 'Barlow Condensed';
+        font-weight: 500;
+        font-display: swap;
+        src: url(assets/fonts/BarlowCondensed-500.woff2) format('woff2');
+      }
+      @font-face {
+        font-family: 'Barlow Condensed';
+        font-weight: 600;
+        font-display: swap;
+        src: url(assets/fonts/BarlowCondensed-600.woff2) format('woff2');
+      }
+      @font-face {
+        font-family: 'Barlow Condensed';
+        font-weight: 700;
+        font-display: swap;
+        src: url(assets/fonts/BarlowCondensed-700.woff2) format('woff2');
+      }
+      /* A late-90s console look: flat colours, bevelled boxes, hard shadows, a screen-door backdrop. */
+      :root {
+        --bg: #07081a;
+        --panel: #10153a;
+        --sunk: #0a0e28;
+        --raised: #222b66;
+        --hi: #4a58a8; /* bevel, lit edge */
+        --lo: #02030c; /* bevel, shaded edge */
+        --line: #2a3474;
+        --ink: #f4f1e4;
+        --muted: #8d97c4;
+        --hot: #ffd21a; /* what's picked, and the title */
+        --hot-ink: #1a1000;
+        --red: #c8141e;
+        --bad: #ff3a3a;
+        --display: 'Bungee', 'Impact', system-ui, sans-serif;
+        --ui: 'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif;
+        /* the screen's notch and rounded corners (viewport-fit=cover): the HUD keeps clear of them */
+        --sl: env(safe-area-inset-left, 0px);
+        --sr: env(safe-area-inset-right, 0px);
+        --st: env(safe-area-inset-top, 0px);
+        --sb: env(safe-area-inset-bottom, 0px);
+        --tu: clamp(46px, 11.5vmin, 68px); /* a touch button, about a thumb */
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: var(--ui);
+        font-size: 17px;
+      }
+      canvas#gl {
+        position: fixed;
+        inset: 0;
+        display: block;
+        image-rendering: auto;
+        touch-action: none;
+      } /* drawn at a low resolution and shown big */
+      button,
+      select,
+      input {
+        font: inherit;
+        color: inherit;
+        touch-action: manipulation;
+      }
+      .hidden {
+        display: none !important;
+      }
+      .panel,
+      .startbar,
+      details.help,
+      .card {
+        background: var(--panel);
+        border: 2px solid;
+        border-color: var(--hi) var(--lo) var(--lo) var(--hi);
+      }
+
+      /* ---------- screens ---------- */
+      .screen {
+        position: fixed;
+        inset: 0;
+        z-index: 20;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        overflow-y: auto;
+        padding: calc(24px + var(--st)) calc(16px + var(--sr)) calc(40px + var(--sb)) calc(16px + var(--sl));
+        background-color: rgba(4, 5, 18, 0.55);
+        background-image: repeating-conic-gradient(rgba(0, 0, 0, 0.6) 0 25%, transparent 0 50%);
+        background-size: 4px 4px;
+      }
+      <!-- source page only -- > .src-hint {
+        position: absolute;
+        bottom: 12vh;
+        left: 16px;
+        right: 16px;
+        text-align: center;
+        font-family: var(--ui);
+        font-size: 18px;
+        color: var(--muted);
+        opacity: 0;
+        animation: src-hint 0s 3s forwards;
+      }
+      .src-hint code {
+        color: var(--ink);
+      }
+      @keyframes src-hint {
+        to {
+          opacity: 1;
+        }
+      }
+      <!-- /source page only -- > #loading {
+        align-items: center;
+        font-family: var(--display);
+        font-size: 28px;
+        letter-spacing: 2px;
+        color: var(--hot);
+        text-shadow: 3px 3px 0 #000;
+      }
+      .menu-inner {
+        width: min(1100px, 100%);
+      }
+      .brand {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 16px;
+      }
+      .brand h1 {
+        margin: 0 0 0 6px;
+        font-family: var(--display);
+        font-weight: 400;
+        font-size: clamp(44px, 8vw, 84px);
+        line-height: 0.9;
+        letter-spacing: 1px;
+        color: var(--hot);
+        transform: skewX(-8deg);
+        text-shadow:
+          4px 4px 0 var(--red),
+          8px 8px 0 #000;
+      }
+      .brand p {
+        margin: 0 0 6px;
+        max-width: 560px;
+        color: var(--muted);
+        font-size: 18px;
+        text-shadow: 1px 1px 0 #000;
+      }
+      .row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .cover-credits {
+        margin: 0 0 16px;
+        padding: 10px 12px;
+        border-left: 3px solid var(--hot);
+        background: var(--sunk);
+        font-size: 14px;
+        line-height: 1.45;
+      }
+      .cover-credits h2 {
+        margin: 0 0 4px;
+        color: var(--hot);
+        font-size: 14px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+      }
+      .cover-credits p {
+        margin: 3px 0;
+      }
+      .cover-credits a {
+        color: var(--ink);
+        text-underline-offset: 3px;
+      }
+      .cover-credits a:focus-visible {
+        outline: 2px solid var(--hot);
+        outline-offset: 3px;
+      }
+      .label {
+        color: var(--muted);
+        font-weight: 700;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        font-size: 14px;
+      }
+      .label b {
+        color: var(--ink);
+      }
+      .btn {
+        background: var(--raised);
+        border: 2px solid;
+        border-color: var(--hi) var(--lo) var(--lo) var(--hi);
+        border-radius: 0;
+        padding: 6px 14px;
+        cursor: pointer;
+        font-weight: 700;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        text-shadow: 1px 1px 0 #000;
+      }
+      .btn:hover,
+      .btn:focus-visible {
+        background: var(--hot);
+        color: var(--hot-ink);
+        text-shadow: none;
+        outline: none;
+      }
+      .btn:active {
+        border-color: var(--lo) var(--hi) var(--hi) var(--lo);
+      }
+      .btn:disabled {
+        opacity: 0.35;
+        cursor: default;
+        background: var(--raised);
+        color: var(--ink);
+      }
+      .btn.small {
+        padding: 3px 9px;
+        font-size: 15px;
+      }
+      select {
+        background: var(--sunk);
+        border: 2px solid;
+        border-color: var(--lo) var(--hi) var(--hi) var(--lo);
+        border-radius: 0;
+        padding: 4px 6px;
+      }
+      select:focus-visible {
+        outline: 2px solid var(--hot);
+        outline-offset: 0;
+      }
+      @keyframes blink {
+        50% {
+          opacity: 0.3;
+        }
+      }
+
+      .panel {
+        margin-bottom: 12px;
+      }
+      .panel > h2 {
+        margin: 0;
+        padding: 3px 10px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        background: var(--red);
+        font-family: var(--display);
+        font-weight: 400;
+        font-size: 18px;
+        letter-spacing: 1px;
+        color: var(--hot);
+        text-shadow: 2px 2px 0 #000;
+      }
+      .panel-body {
+        padding: 8px;
+        display: grid;
+        gap: 6px;
+      }
+      .stepper {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-family: var(--ui);
+        font-size: 15px;
+      }
+      .stepper b {
+        min-width: 1.4em;
+        text-align: center;
+        font-family: var(--display);
+        font-weight: 400;
+        font-size: 18px;
+        color: var(--ink);
+      }
+
+      /* the players: a card each, with the car and the seat they picked */
+      .players {
+        display: grid;
+        gap: 6px;
+      }
+      .player {
+        display: grid;
+        grid-template-columns: 180px auto 1fr auto;
+        gap: 10px;
+        align-items: center;
+        padding: 6px 8px;
+        background: var(--sunk);
+        border-left: 8px solid var(--team, #888);
+      }
+      .player .who b {
+        font-weight: 700;
+        letter-spacing: 0.5px;
+      }
+      .player .who select {
+        width: 100%;
+      }
+      .pick {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+      }
+      .pick button {
+        background: var(--raised);
+        border: 2px solid;
+        border-color: var(--hi) var(--lo) var(--lo) var(--hi);
+        border-radius: 0;
+        padding: 3px 9px;
+        cursor: pointer;
+        font-weight: 700;
+        font-size: 15px;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        text-shadow: 1px 1px 0 #000;
+      }
+      .pick button:hover,
+      .pick button:focus-visible {
+        border-color: var(--hot);
+        outline: none;
+      }
+      .pick button.on {
+        background: var(--hot);
+        color: var(--hot-ink);
+        border-color: #fff6b0 #7a5a00 #7a5a00 #fff6b0;
+        text-shadow: none;
+      }
+      .pick button.taken {
+        color: var(--muted);
+        font-style: italic;
+      }
+      .pick .sw {
+        min-width: 32px;
+        background: var(--c);
+        color: #000;
+        text-shadow: none;
+      }
+      .pick .sw.on {
+        background: var(--c);
+        color: #000;
+        box-shadow:
+          inset 0 0 0 2px #000,
+          inset 0 0 0 4px #fff;
+      }
+      .player .x {
+        width: 30px;
+        height: 30px;
+        padding: 0;
+        background: var(--raised);
+        border: 2px solid;
+        border-color: var(--hi) var(--lo) var(--lo) var(--hi);
+        cursor: pointer;
+        font-weight: 700;
+        font-size: 18px;
+        line-height: 1;
+      }
+      .player .x:hover,
+      .player .x:focus-visible {
+        background: var(--bad);
+        outline: none;
+      }
+      .nobody {
+        margin: 2px 4px;
+        color: var(--muted);
+      }
+      .join {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        align-items: center;
+      }
+      .join .hint {
+        color: var(--hot);
+        font-weight: 700;
+        font-size: 14px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        animation: blink 1.2s steps(2) infinite;
+      }
+
+      /* the cars: each turning next to its row, its kit, who sits where */
+      .cars {
+        display: grid;
+        gap: 6px;
+      }
+      .car-row {
+        display: grid;
+        grid-template-columns: 34px 132px 112px 1fr;
+        gap: 10px;
+        align-items: center;
+        padding: 4px 8px;
+        background: var(--sunk);
+        border-left: 8px solid var(--team, #888);
+      }
+      .car-num {
+        font-family: var(--display);
+        font-size: 26px;
+        text-align: center;
+        color: var(--team, #888);
+        text-shadow: 2px 2px 0 #000;
+      }
+      .team-name {
+        font-weight: 700;
+        color: var(--team, #888);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        text-shadow: 1px 1px 0 #000;
+      }
+      .car-look {
+        display: grid;
+        gap: 4px;
+      }
+      .car-spin {
+        width: 132px;
+        height: 72px;
+        display: block;
+        image-rendering: pixelated;
+      }
+      .car-look select.kit {
+        font-size: 14px;
+        padding: 2px 4px;
+        width: 100%;
+      }
+      .crew {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 4px;
+      }
+      .crew-seat {
+        padding: 3px 7px;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        color: var(--muted);
+      }
+      .crew-seat span {
+        display: block;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      .crew-seat.human {
+        background: var(--hot);
+        border-color: #fff6b0;
+        color: var(--hot-ink);
+      }
+      .crew-seat.human span {
+        color: #6a5000;
+      }
+      .under {
+        margin: 0 0 12px;
+        justify-content: flex-end;
+        gap: 18px;
+      }
+      .opt {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .startbar {
+        display: flex;
+        gap: 16px;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        padding: 10px 14px 14px;
+      }
+      .summary {
+        color: var(--muted);
+        font-size: 18px;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+      }
+      .summary b {
+        color: var(--hot);
+      }
+      .start {
+        font-family: var(--display);
+        font-size: 28px;
+        padding: 10px 34px;
+        border: 0;
+        border-radius: 0;
+        cursor: pointer;
+        color: var(--hot-ink);
+        background: var(--hot);
+        transform: skewX(-8deg);
+        box-shadow:
+          4px 4px 0 var(--red),
+          8px 8px 0 #000;
+      }
+      .start:hover,
+      .start:focus-visible {
+        background: #fff;
+        outline: none;
+      }
+      .start:active {
+        transform: skewX(-8deg) translate(3px, 3px);
+        box-shadow:
+          1px 1px 0 var(--red),
+          5px 5px 0 #000;
+      }
+      .points-info {
+        margin: 0 0 12px;
+        padding: 6px 10px;
+        color: var(--muted);
+        font-size: 15px;
+        line-height: 1.45;
+        background: var(--sunk);
+        border: 1px solid var(--line);
+      }
+      .points-info b {
+        color: var(--ink);
+      }
+      details.help {
+        margin-top: 12px;
+      }
+      details.help summary {
+        cursor: pointer;
+        padding: 4px 10px;
+        background: var(--raised);
+        font-weight: 700;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+      }
+      details.help[open] summary {
+        background: var(--red);
+        color: var(--hot);
+        text-shadow: 1px 1px 0 #000;
+      }
+      details.help > :not(summary) {
+        margin-left: 12px;
+        margin-right: 12px;
+      }
+      .about p {
+        margin: 8px 0;
+        color: var(--ink);
+      }
+      .help table {
+        border-collapse: collapse;
+        width: calc(100% - 24px);
+        margin: 10px 12px 6px;
+        font-size: 16px;
+      }
+      .help th,
+      .help td {
+        text-align: left;
+        padding: 5px 8px;
+        border-bottom: 1px solid var(--line);
+        vertical-align: top;
+      }
+      .help th {
+        color: var(--muted);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .help th[scope='row'] {
+        color: var(--hot);
+      }
+      .pads {
+        color: var(--muted);
+        font-size: 15px;
+        margin: 6px 12px 10px;
+      }
+      kbd {
+        font-family: var(--ui);
+        font-weight: 700;
+        background: var(--raised);
+        border: 1px solid;
+        border-color: var(--hi) var(--lo) var(--lo) var(--hi);
+        padding: 0 5px;
+      }
+
+      @media (max-width: 900px) {
+        .player {
+          grid-template-columns: 1fr auto;
+        }
+        .player .pick {
+          grid-column: 1 / -1;
+        }
+        .player .x {
+          grid-row: 1;
+          grid-column: 2;
+        }
+        .car-row {
+          grid-template-columns: 30px 132px 1fr;
+        }
+        .crew {
+          grid-column: 1 / -1;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      /* ---------- pause / round over ---------- */
+      #pause {
+        align-items: center;
+      }
+      .card {
+        width: min(440px, 100%);
+        padding: 22px;
+        display: grid;
+        gap: 10px;
+        text-align: center;
+      }
+      .pause-note {
+        margin: 0 0 6px;
+        color: var(--hot);
+        font-weight: 700;
+      }
+      .pause-note:empty {
+        display: none;
+      }
+      .card h2 {
+        margin: 0 0 8px;
+        font-family: var(--display);
+        font-weight: 400;
+        font-size: 34px;
+        color: var(--hot);
+        text-shadow:
+          3px 3px 0 var(--red),
+          6px 6px 0 #000;
+      }
+      .card .btn {
+        padding: 10px;
+        font-size: 20px;
+      }
+
+      /* ---------- in-game HUD ---------- */
+      #hud {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 10;
+      }
+      .vp {
+        position: absolute;
+        overflow: hidden;
+        outline: 2px solid #000;
+      }
+      .vp-tag {
+        position: absolute;
+        left: calc(10px + var(--sl));
+        top: calc(8px + var(--st));
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        font-weight: 700;
+        font-size: 17px;
+        text-shadow: 2px 2px 0 #000;
+      }
+      .vp-tag .pn {
+        font-family: var(--display);
+        font-weight: 400;
+        font-size: 18px;
+        padding: 1px 8px 0;
+        background: var(--team);
+        color: #fff;
+        border: 2px solid #000;
+        text-shadow: 2px 2px 0 #000;
+      }
+      .vp-tag .role {
+        letter-spacing: 2px;
+      }
+      .vp-tag .dev {
+        color: var(--muted);
+        font-weight: 600;
+        font-size: 15px;
+      }
+      .vp-hp {
+        position: absolute;
+        left: calc(10px + var(--sl));
+        bottom: calc(10px + var(--sb));
+        width: min(260px, 42%);
+      }
+      .vp-hp .cap {
+        display: flex;
+        justify-content: space-between;
+        font-weight: 700;
+        font-size: 15px;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        text-shadow: 2px 2px 0 #000;
+        margin-bottom: 3px;
+      }
+      .bar {
+        height: 12px;
+        background: #000;
+        border: 2px solid;
+        border-color: #707070 #181818 #181818 #707070;
+        overflow: hidden;
+      }
+      .bar > i {
+        display: block;
+        height: 100%;
+        width: 100%;
+        background:
+          repeating-linear-gradient(90deg, transparent 0 8px, #000 8px 10px),
+          linear-gradient(90deg, #e81c1c 0 30%, #f2c200 30% 60%, #2ad04a 60%);
+        background-size:
+          auto,
+          256px 100%;
+      }
+      .vp-info {
+        position: absolute;
+        right: calc(12px + var(--sr));
+        bottom: calc(10px + var(--sb));
+        text-align: right;
+        text-shadow: 2px 2px 0 #000;
+      }
+      .vp-info .big {
+        font-family: var(--display);
+        font-size: 30px;
+        line-height: 1;
+        text-shadow: 3px 3px 0 #000;
+      }
+      .vp-info .small {
+        font-weight: 700;
+        font-size: 15px;
+        color: var(--muted);
+        letter-spacing: 1px;
+        text-transform: uppercase;
+      }
+      .vp-info .meter {
+        width: 120px;
+        height: 8px;
+        margin: 4px 0 0 auto;
+        background: #000;
+        border: 1px solid #000;
+        overflow: hidden;
+      }
+      .vp-info .meter > i {
+        display: block;
+        height: 100%;
+        background: var(--hot);
+      }
+      .vp-hint {
+        position: absolute;
+        left: calc(10px + var(--sl));
+        top: calc(38px + var(--st));
+        max-width: 52%;
+        font-size: 14px;
+        font-weight: 600;
+        line-height: 1.3;
+        color: var(--ink);
+        text-shadow:
+          1px 1px 0 #000,
+          2px 2px 0 #000;
+        transition: opacity 0.6s steps(4);
+      }
+      .vp-canvas {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        display: none;
+      }
+      .vp-paint {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+      .vp.mech .vp-canvas,
+      .vp.jam .vp-canvas {
+        display: block;
+      }
+      .vp.jam .vp-info {
+        display: none;
+      } /* the jam panel says it all */
+      .vp.mech .vp-info,
+      .vp.mech .vp-hint,
+      .vp.mech .vp-status,
+      .vp.mech .vp-hp,
+      .vp.mech .vp-map {
+        display: none;
+      }
+      .vp-map {
+        position: absolute;
+        right: calc(10px + var(--sr));
+        bottom: calc(10px + var(--sb));
+        border-radius: 50%;
+        border: 2px solid #000;
+      }
+      .vp-status {
+        position: absolute;
+        left: calc(10px + var(--sl));
+        bottom: calc(46px + var(--sb));
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        max-width: 62%;
+      }
+      .chip {
+        padding: 1px 7px;
+        font-weight: 700;
+        font-size: 13px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        background: rgba(0, 0, 0, 0.8);
+        border: 1px solid #5a5a5a;
+        color: var(--muted);
+      }
+      .chip.warn {
+        color: var(--hot);
+        border-color: var(--hot);
+      }
+      .chip.bad {
+        color: #fff;
+        background: var(--bad);
+        border-color: #000;
+        animation: blink 0.7s steps(2) infinite;
+      }
+      .vp-side {
+        position: absolute;
+        right: calc(10px + var(--sr));
+        top: calc(8px + var(--st));
+        display: grid;
+        gap: 4px;
+        justify-items: end;
+        max-width: 46%;
+      }
+      .vp-scores {
+        display: flex;
+        gap: 4px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+      .vp-feed {
+        display: grid;
+        gap: 3px;
+        justify-items: end;
+      }
+      .cross {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 26px;
+        height: 26px;
+        margin: -13px 0 0 -13px;
+      }
+      .cross::before,
+      .cross::after {
+        content: '';
+        position: absolute;
+        background: #fff;
+        box-shadow: 1px 1px 0 #000;
+      }
+      .cross::before {
+        left: 12px;
+        top: 0;
+        width: 2px;
+        height: 26px;
+        clip-path: polygon(0 0, 100% 0, 100% 35%, 0 35%, 0 65%, 100% 65%, 100% 100%, 0 100%);
+      }
+      .cross::after {
+        top: 12px;
+        left: 0;
+        height: 2px;
+        width: 26px;
+        clip-path: polygon(0 0, 35% 0, 35% 100%, 0 100%, 0 0, 65% 0, 100% 0, 100% 100%, 65% 100%);
+      }
+      .hitmark {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 30px;
+        height: 30px;
+        margin: -15px 0 0 -15px;
+        opacity: 0;
+      }
+      .hitmark::before,
+      .hitmark::after {
+        content: '';
+        position: absolute;
+        left: 14px;
+        top: -2px;
+        width: 2px;
+        height: 34px;
+        background: #fff;
+        box-shadow: 1px 1px 0 #000;
+      }
+      .hitmark::before {
+        transform: rotate(45deg);
+      }
+      .hitmark::after {
+        transform: rotate(-45deg);
+      }
+      .hitmark.on {
+        opacity: 1;
+      }
+      .hitmark.kill::before,
+      .hitmark.kill::after {
+        background: var(--bad);
+      }
+      .dmgflash {
+        position: absolute;
+        inset: 0;
+        box-shadow: inset 0 0 0 14px rgba(230, 20, 20, 0.75);
+        opacity: 0;
+      }
+      .vp-msg {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 30%;
+        text-align: center;
+        font-family: var(--display);
+        font-size: clamp(18px, 3vw, 32px);
+        text-shadow: 3px 3px 0 #000;
+      }
+      .vp-msg small {
+        display: block;
+        font-family: var(--ui);
+        font-weight: 700;
+        font-size: 17px;
+        color: var(--muted);
+        margin-top: 4px;
+        text-shadow: 2px 2px 0 #000;
+      }
+      .lockhint {
+        position: absolute;
+        left: 50%;
+        top: 62%;
+        transform: translateX(-50%);
+        padding: 5px 12px;
+        background: rgba(0, 0, 0, 0.8);
+        border: 2px solid var(--hot);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      #center {
+        position: fixed;
+        left: 0;
+        right: 0;
+        top: 18%;
+        z-index: 12;
+        text-align: center;
+        pointer-events: none;
+        font-family: var(--display);
+        font-size: clamp(42px, 9vw, 120px);
+        line-height: 1;
+        color: var(--hot);
+        transform: skewX(-8deg);
+        text-shadow:
+          5px 5px 0 var(--red),
+          10px 10px 0 #000;
+      }
+      #center small {
+        display: block;
+        margin-top: 14px;
+        font-family: var(--ui);
+        font-weight: 700;
+        font-size: clamp(18px, 2.4vw, 28px);
+        color: var(--ink);
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        text-shadow: 2px 2px 0 #000;
+      }
+      #feed {
+        position: fixed;
+        right: calc(12px + var(--sr));
+        top: calc(44px + var(--st));
+        z-index: 12;
+        display: grid;
+        gap: 4px;
+        justify-items: end;
+        pointer-events: none;
+      }
+      #feed div,
+      .vp-feed div {
+        padding: 2px 9px;
+        background: rgba(0, 0, 0, 0.78);
+        border-left: 3px solid var(--c, #fff);
+        font-weight: 700;
+        font-size: 15px;
+        animation: feedIn 0.24s steps(3);
+      }
+      #feed b,
+      .vp-feed b {
+        color: var(--c, #fff);
+      }
+      @keyframes feedIn {
+        from {
+          transform: translateX(30px);
+          opacity: 0;
+        }
+      }
+      #scores {
+        position: fixed;
+        left: 50%;
+        top: 8px;
+        transform: translateX(-50%);
+        z-index: 12;
+        display: flex;
+        gap: 6px;
+        pointer-events: none;
+      }
+      #scores span,
+      .vp-scores span {
+        padding: 1px 9px;
+        background: rgba(0, 0, 0, 0.78);
+        font-weight: 700;
+        font-size: 15px;
+        text-transform: uppercase;
+        border-bottom: 3px solid var(--c);
+      }
+      #scores span.out,
+      .vp-scores span.out {
+        opacity: 0.45;
+        text-decoration: line-through;
+      }
+      #scores span b,
+      .vp-scores span b {
+        margin-left: 5px;
+        color: #fff;
+      }
+      #scores span i,
+      .vp-scores span i {
+        font-style: normal;
+        margin-left: 5px;
+        color: var(--hot);
+        font-size: 13px;
+      }
+      .hs {
+        color: var(--hot);
+        font-weight: 800;
+      }
+      .burnf {
+        color: #ffa21a;
+        font-weight: 800;
+      }
+      .vp-burn {
+        position: absolute;
+        left: 50%;
+        top: 70%;
+        transform: translateX(-50%);
+        font-family: var(--display);
+        font-size: clamp(15px, 2.3vw, 26px);
+        color: #ffa21a;
+        text-shadow:
+          2px 2px 0 var(--red),
+          4px 4px 0 #000;
+        opacity: 0;
+        pointer-events: none;
+        white-space: nowrap;
+      }
+      .vp-burn.on {
+        opacity: 1;
+      }
+      .vp-pts {
+        position: absolute;
+        left: 50%;
+        top: 55%;
+        transform: translateX(-50%);
+        display: grid;
+        gap: 2px;
+        justify-items: center;
+        pointer-events: none;
+      }
+      .vp-pts .pop {
+        font-family: var(--display);
+        font-size: clamp(14px, 2.1vw, 24px);
+        color: #fff;
+        text-shadow: 2px 2px 0 #000;
+        white-space: nowrap;
+        animation: popUp 1.9s steps(12) forwards;
+      }
+      .vp-pts .pop.hs {
+        color: var(--hot);
+      }
+      .vp-pts .pop.burn {
+        color: #ffa21a;
+      }
+      .vp-pts .pop.wreck {
+        color: #ff7cbc;
+      }
+      .vp-pts .pop.win {
+        color: #6dff8a;
+      }
+      .vp-pts .pop.lost {
+        color: var(--bad);
+      }
+      @keyframes popUp {
+        0% {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        10% {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        70% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0;
+          transform: translateY(-26px);
+        }
+      }
+      /* the gunners' goggles: the turret camera feed */
+      .camfeed {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        display: none;
+        overflow: hidden;
+      }
+      .vp.cam .camfeed {
+        display: block;
+      }
+      .camfeed::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.18) 0 1px, transparent 1px 3px);
+      }
+      .camfeed::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        box-shadow:
+          inset 0 0 0 10px rgba(0, 0, 0, 0.8),
+          inset 0 0 0 16px rgba(0, 24, 32, 0.5);
+      }
+      .camfeed .br {
+        position: absolute;
+        width: 26px;
+        height: 26px;
+        border: 2px solid rgba(150, 240, 255, 0.7);
+      }
+      .camfeed .tl {
+        left: 34%;
+        top: 30%;
+        border-right: 0;
+        border-bottom: 0;
+      }
+      .camfeed .tr {
+        right: 34%;
+        top: 30%;
+        border-left: 0;
+        border-bottom: 0;
+      }
+      .camfeed .bl {
+        left: 34%;
+        bottom: 30%;
+        border-right: 0;
+        border-top: 0;
+      }
+      .camfeed .br2 {
+        right: 34%;
+        bottom: 30%;
+        border-left: 0;
+        border-top: 0;
+      }
+      .camtag {
+        position: absolute;
+        left: calc(12px + var(--sl));
+        top: calc(58px + var(--st));
+        font-weight: 800;
+        font-size: 14px;
+        letter-spacing: 1.5px;
+        color: var(--bad);
+        text-shadow: 1px 1px 0 #000;
+        animation: blink 1.2s steps(2) infinite;
+      }
+      .camdata {
+        position: absolute;
+        left: 50%;
+        bottom: 30%;
+        transform: translate(-50%, 34px);
+        font-weight: 700;
+        font-size: 13px;
+        letter-spacing: 1px;
+        color: rgba(170, 245, 255, 0.9);
+        text-shadow: 1px 1px 0 #000;
+        white-space: nowrap;
+      }
+      /* online: another screen waits for the host's round; the line at the bottom says when the link is down */
+      #netWait {
+        align-items: center;
+      }
+      .wait {
+        width: min(100%, 460px);
+      }
+      .wait-status {
+        color: var(--muted);
+        margin: 0 0 14px;
+      }
+      .wait-cars {
+        display: grid;
+        gap: 6px;
+        text-align: left;
+      }
+      .wait-car {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2px 14px;
+        padding: 6px 10px;
+        background: var(--sunk);
+        border-left: 6px solid var(--team);
+        font-size: 15px;
+      }
+      .wait-car b {
+        flex-basis: 100%;
+      }
+      .wait-car .you {
+        color: var(--hot);
+        font-weight: 700;
+      }
+      #netStatus {
+        position: fixed;
+        left: 50%;
+        bottom: calc(12px + var(--sb));
+        transform: translateX(-50%);
+        z-index: 30;
+        padding: 4px 12px;
+        background: rgba(0, 0, 0, 0.85);
+        border: 2px solid var(--hot);
+        font-weight: 700;
+        pointer-events: none;
+      }
+      .replica #restartBtn,
+      .replica #setupBtn {
+        display: none;
+      }
+      @media (max-height: 520px), (pointer: coarse) {
+        .startbar {
+          position: sticky;
+          bottom: -40px;
+          z-index: 1;
+        }
+      } /* a phone or a tablet: START stays in reach */
+
+      /* ---------- touch (src/touch.ts): the controls of whoever plays by touch, over their view ---------- */
+      #touch {
+        position: fixed;
+        z-index: 15;
+        overflow: hidden;
+        touch-action: none;
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-touch-callout: none;
+        -webkit-tap-highlight-color: transparent;
+      }
+      #touch > * {
+        position: absolute;
+        display: none;
+        margin: 0;
+      }
+      /* the buttons: flat bevelled boxes, see-through with a screen-door dither; pressed, they light up and sink */
+      #touch .tb,
+      .t-dpad b {
+        place-items: center;
+        padding: 0 4px;
+        border: 3px solid;
+        border-color: var(--hi) var(--lo) var(--lo) var(--hi);
+        border-radius: 0;
+        background-color: rgba(16, 21, 58, 0.5);
+        background-image: repeating-conic-gradient(rgba(0, 0, 0, 0.32) 0 25%, transparent 0 50%);
+        background-size: 4px 4px;
+        color: var(--ink);
+        font: 700 15px/1.05 var(--ui);
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        text-shadow: 2px 2px 0 #000;
+        touch-action: none;
+      }
+      #touch .tb.on,
+      .t-dpad b.on {
+        background: var(--hot);
+        color: var(--hot-ink);
+        border-color: var(--lo) var(--hi) var(--hi) var(--lo);
+        text-shadow: none;
+      }
+      #touch .big {
+        font: 400 21px/1 var(--display);
+        letter-spacing: 1px;
+      }
+      /* everyone: the menu up in the left corner, the seat in the right one */
+      #touch[data-seat] :is(.t-pause, .t-seat) {
+        display: grid;
+      }
+      #touch .t-pause {
+        left: calc(var(--sl) + 8px);
+        top: calc(var(--st) + 8px);
+        width: var(--tu);
+        height: calc(var(--tu) * 0.86);
+      }
+      #touch .t-pause::before {
+        content: '';
+        width: 6px;
+        height: 40%;
+        background: currentColor;
+        box-shadow: 10px 0 currentColor;
+        translate: -5px 0;
+        filter: drop-shadow(2px 2px 0 #000);
+      }
+      #touch .t-pause.on::before {
+        filter: none;
+      }
+      #touch .t-seat {
+        right: calc(var(--sr) + 8px);
+        top: calc(var(--st) + 8px);
+        width: calc(var(--tu) * 1.5);
+        height: calc(var(--tu) * 0.86);
+      }
+      /* the driver: the left thumb steers wherever it lands; the right one has the pedals, and slides between them */
+      #touch[data-seat='drive'] :is(.t-cam, .t-gas, .t-brake, .t-nitro, .t-hand) {
+        display: grid;
+      }
+      #touch[data-seat='drive'] .t-steer {
+        display: flex;
+      }
+      #touch .t-cam {
+        right: calc(var(--sr) + 16px + var(--tu) * 1.5);
+        top: calc(var(--st) + 8px);
+        width: calc(var(--tu) * 1.3);
+        height: calc(var(--tu) * 0.86);
+      }
+      #touch .t-gas {
+        right: calc(var(--sr) + 14px);
+        bottom: calc(var(--sb) + 14px);
+        width: calc(var(--tu) * 1.9);
+        height: calc(var(--tu) * 1.9);
+      }
+      #touch .t-brake {
+        right: calc(var(--sr) + 24px + var(--tu) * 1.9);
+        bottom: calc(var(--sb) + 14px);
+        width: calc(var(--tu) * 1.5);
+        height: calc(var(--tu) * 1.5);
+      }
+      #touch .t-nitro {
+        right: calc(var(--sr) + 14px);
+        bottom: calc(var(--sb) + 24px + var(--tu) * 1.9);
+        width: calc(var(--tu) * 1.9);
+        height: calc(var(--tu) * 1.05);
+        color: #9fe8ff;
+      }
+      #touch .t-hand {
+        right: calc(var(--sr) + 24px + var(--tu) * 1.9);
+        bottom: calc(var(--sb) + 24px + var(--tu) * 1.5);
+        width: calc(var(--tu) * 1.5);
+        height: calc(var(--tu) * 1.05);
+        font-size: 13px;
+      }
+      #touch .t-steer {
+        left: calc(var(--sl) + 20px + var(--tu) * 1.8);
+        bottom: calc(var(--sb) + 26px + var(--tu) * 0.6);
+        width: calc(var(--tu) * 3.6);
+        height: calc(var(--tu) * 1.2);
+        translate: -50% 50%;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 10px;
+        border: 3px solid;
+        border-color: var(--lo) var(--hi) var(--hi) var(--lo);
+        background: rgba(10, 14, 40, 0.45);
+        opacity: 0.55;
+        pointer-events: none;
+      }
+      #touch .t-steer.on {
+        bottom: auto;
+        translate: -50% -50%;
+        opacity: 1;
+      }
+      #touch .t-steer::before,
+      #touch .t-steer::after {
+        content: '';
+        width: 12px;
+        height: 18px;
+        background: var(--muted);
+        clip-path: polygon(0 50%, 100% 0, 100% 100%);
+      }
+      #touch .t-steer::after {
+        clip-path: polygon(0 0, 100% 50%, 0 100%);
+      }
+      #touch .t-steer i {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: calc(var(--tu) * 1.1);
+        height: calc(var(--tu) * 0.9);
+        margin: calc(var(--tu) * -0.45) 0 0 calc(var(--tu) * -0.55);
+        background: var(--raised);
+        border: 3px solid;
+        border-color: var(--hi) var(--lo) var(--lo) var(--hi);
+      }
+      #touch .t-steer.on i {
+        background: var(--hot);
+      }
+      /* a gunner: drag anywhere to aim, hold FIRE (it aims as it slides too) */
+      #touch[data-seat='gun'] :is(.t-fire, .t-zoom) {
+        display: grid;
+      }
+      #touch .t-fire {
+        right: calc(var(--sr) + 16px);
+        bottom: calc(var(--sb) + 16px);
+        width: calc(var(--tu) * 2);
+        height: calc(var(--tu) * 2);
+        color: #ffb0a8;
+      }
+      #touch[data-jam] .t-fire {
+        opacity: 0.4;
+      }
+      #touch .t-zoom {
+        right: calc(var(--sr) + 16px + var(--tu) * 0.3);
+        bottom: calc(var(--sb) + 28px + var(--tu) * 2);
+        width: calc(var(--tu) * 1.4);
+        height: calc(var(--tu) * 0.9);
+      }
+      /* the arrows: a jammed gun, and the mechanic's jobs that go by directions */
+      #touch[data-arrows] .t-dpad {
+        display: grid;
+      }
+      #touch .t-dpad {
+        left: calc(var(--sl) + 14px);
+        bottom: calc(var(--sb) + 14px);
+        grid-template: repeat(3, calc(var(--tu) * 1.02)) / repeat(3, calc(var(--tu) * 1.02));
+      }
+      .t-dpad b {
+        display: grid;
+      }
+      .t-dpad b::before {
+        content: '';
+        width: 40%;
+        height: 34%;
+        background: currentColor;
+        clip-path: polygon(50% 0, 100% 100%, 0 100%);
+        filter: drop-shadow(2px 2px 0 #000);
+      }
+      .t-dpad b.on::before {
+        filter: none;
+      }
+      .t-dpad [data-dir='up'] {
+        grid-area: 1 / 2;
+      }
+      .t-dpad [data-dir='left'] {
+        grid-area: 2 / 1;
+      }
+      .t-dpad [data-dir='left']::before {
+        rotate: -90deg;
+      }
+      .t-dpad [data-dir='right'] {
+        grid-area: 2 / 3;
+      }
+      .t-dpad [data-dir='right']::before {
+        rotate: 90deg;
+      }
+      .t-dpad [data-dir='down'] {
+        grid-area: 3 / 2;
+      }
+      .t-dpad [data-dir='down']::before {
+        rotate: 180deg;
+      }
+      /* the mechanic plays on the job screen (touch.ts puts these over it): it lights up while it's touched */
+      #touch[data-seat='mech'] .t-jobs {
+        display: block;
+        pointer-events: none;
+      }
+      #touch .t-jobs.on {
+        box-shadow:
+          0 0 0 3px var(--hot),
+          0 0 0 5px #000;
+      }
+      #touch[data-seat='mech']:not([data-job='list']) .t-drop {
+        display: grid;
+      }
+      #touch .t-drop {
+        width: calc(var(--tu) * 1.6);
+        height: calc(var(--tu) * 0.8);
+        translate: -100% -100%;
+        font-size: 14px;
+      }
+      /* a phone held upright is too narrow for the dash */
+      #touch .t-turn {
+        left: 50%;
+        top: 50%;
+        translate: -50% -50%;
+        width: min(86%, 320px);
+        padding: 16px;
+        text-align: center;
+        pointer-events: none;
+        background: var(--panel);
+        border: 2px solid;
+        border-color: var(--hi) var(--lo) var(--lo) var(--hi);
+        font: 400 20px/1.15 var(--display);
+        color: var(--hot);
+        text-shadow: 2px 2px 0 #000;
+      }
+      #touch .t-turn small {
+        display: block;
+        margin-top: 8px;
+        font: 700 16px var(--ui);
+        color: var(--ink);
+        text-shadow: 1px 1px 0 #000;
+      }
+      @media (orientation: portrait) and (max-width: 600px) {
+        #touch[data-seat='mech'] .t-turn {
+          display: block;
+        }
+      }
+
+      /* The HUD of whoever plays by touch makes room for the thumbs: the radar up top, the read-outs between them. */
+      .vp.touch .vp-tag,
+      .vp.touch .vp-hint {
+        left: calc(var(--sl) + 16px + var(--tu));
+      }
+      .vp.touch .vp-tag .dev {
+        display: none;
+      }
+      .vp.touch .vp-side {
+        top: calc(var(--st) + 16px + var(--tu) * 0.86);
+      }
+      .vp.touch .vp-map {
+        left: 50%;
+        right: auto;
+        top: calc(var(--st) + 8px);
+        bottom: auto;
+        translate: -50% 0;
+      }
+      .vp.touch .vp-hp {
+        left: 50%;
+        bottom: calc(var(--sb) + 10px);
+        width: min(210px, 25%);
+        translate: calc(-100% - 10px) 0;
+      }
+      .vp.touch .vp-info {
+        left: 50%;
+        right: auto;
+        bottom: calc(var(--sb) + 8px);
+        translate: 10px 0;
+        text-align: left;
+      }
+      .vp.touch .vp-info .meter {
+        margin-left: 0;
+      }
+      .vp.touch .vp-status {
+        left: 50%;
+        bottom: calc(var(--sb) + 50px);
+        translate: -50% 0;
+        justify-content: center;
+        max-width: 46%;
+      }
+      @media (orientation: portrait) {
+        .vp.touch .vp-map {
+          left: calc(var(--sl) + 8px);
+          top: calc(var(--st) + 16px + var(--tu) * 0.86);
+          translate: none;
+        }
+        .vp.touch .vp-hp {
+          bottom: calc(var(--sb) + 46px + var(--tu) * 3.2);
+          width: 42%;
+        }
+        .vp.touch .vp-info {
+          bottom: calc(var(--sb) + 44px + var(--tu) * 3.2);
+        }
+        .vp.touch .vp-status {
+          bottom: calc(var(--sb) + 90px + var(--tu) * 3.2);
+          max-width: 90%;
+        }
+        /* the hint and the camera's tag under the radar, the camera's angles over its frame */
+        .vp.touch .vp-hint {
+          left: calc(var(--sl) + 10px);
+          top: calc(var(--st) + 24px + var(--tu) * 0.86 + clamp(72px, 25vmin, 150px));
+          max-width: calc(100% - 20px);
+        }
+        .vp.touch .camtag {
+          top: calc(var(--st) + 48px + var(--tu) * 0.86 + clamp(72px, 25vmin, 150px));
+        }
+        .vp.touch .camdata {
+          bottom: 70%;
+          transform: translate(-50%, -6px);
+        }
+      }
+      .utility-dock {
+        position: fixed;
+        right: max(12px, env(safe-area-inset-right));
+        top: max(10px, env(safe-area-inset-top));
+        z-index: 90;
+        display: flex;
+        gap: 6px;
+      }
+      .utility-dock .btn {
+        min-height: 38px;
+        background: #18222f;
+        color: #f4f7fb;
+        border-color: #5d6d80;
+        text-shadow: none;
+      }
+      .utility-dialog {
+        width: min(620px, calc(100vw - 24px));
+        max-height: calc(100dvh - 32px);
+        overflow: auto;
+        background: #18222f;
+        color: #f1f5f9;
+        border: 1px solid #6e8097;
+        padding: 24px;
+        border-radius: 10px;
+        font:
+          500 16px/1.5 system-ui,
+          sans-serif;
+      }
+      .utility-dialog::backdrop {
+        background: #050b14c9;
+      }
+      .utility-dialog header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+      .utility-dialog h2 {
+        font:
+          700 26px/1.2 system-ui,
+          sans-serif;
+        margin: 0;
+        letter-spacing: 0.02em;
+      }
+      .utility-dialog label {
+        display: block;
+        margin: 16px 0;
+      }
+      .utility-dialog select,
+      .utility-dialog input:not([type='file']):not([type='checkbox']) {
+        font: inherit;
+        display: block;
+        width: 100%;
+        margin-top: 6px;
+        min-height: 38px;
+      }
+      .utility-dialog input[type='range'] {
+        accent-color: #bde3ff;
+      }
+      .utility-dialog output {
+        float: right;
+      }
+      .utility-dialog a {
+        color: #bde3ff;
+      }
+      .utility-dialog [data-credit] span {
+        display: block;
+      }
+      .utility-note {
+        color: #b5c2d3;
+        font-size: 14px;
+      }
+      .utility-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+      }
+      .utility-dialog input[type='file'] {
+        display: block;
+        max-width: 100%;
+        margin-top: 6px;
+        font: inherit;
+        font-size: 14px;
+      }
+      .utility-dialog .btn {
+        font: inherit;
+        text-transform: none;
+        background: #293c53;
+        color: #fff;
+        border-color: #7b94b1;
+        text-shadow: none;
+      }
+      .sound-dialog [data-warning] {
+        color: #ffdda0;
+      }
+      .competition-dialog {
+        width: min(1100px, calc(100vw - 24px));
+      }
+      .competition-body h3 {
+        margin: 28px 0 10px;
+        font:
+          700 21px/1.2 system-ui,
+          sans-serif;
+        color: #c5ed7c;
+      }
+      .competition-body p {
+        color: #bac8d8;
+        font-size: 15px;
+      }
+      .competition-table {
+        overflow-x: auto;
+        border: 1px solid #536473;
+        border-radius: 6px;
+      }
+      .competition-table table {
+        width: 100%;
+        border-collapse: collapse;
+        white-space: nowrap;
+        font-size: 15px;
+        text-align: left;
+      }
+      .competition-table th,
+      .competition-table td {
+        padding: 10px 12px;
+        border-bottom: 1px solid #ffffff15;
+      }
+      .competition-table th {
+        background: #243548;
+        font-weight: 700;
+      }
+      .competition-table td:first-child {
+        font-weight: 700;
+      }
+      .competition-table tbody tr:nth-child(even) {
+        background: #ffffff04;
+      }
+      @media (max-width: 600px) {
+        .utility-dock .btn {
+          font-size: 13px;
+          padding: 5px 8px;
+        }
+        .utility-dialog {
+          padding: 18px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="utility-dock" aria-label="Game tools">
+      <button type="button" class="btn small" id="helpBtn">How to play</button
+      ><button type="button" class="btn small" id="statsBtn">Standings</button
+      ><button type="button" class="btn small" id="soundBtn">Sound & picture</button>
+    </nav>
+    <div id="loading" class="screen" role="status">
+      Loading cars…
+      <!-- source page only -->
+      <p class="src-hint">
+        Still here? This is the page's source, without the game in it. Run
+        <code>npm ci --ignore-scripts</code> and <code>npm run dev</code>, then open
+        <code>http://localhost:8411</code>.
+      </p>
+      <!-- /source page only -->
+    </div>
+
+    <div id="menu" class="screen hidden">
+      <div class="menu-inner">
+        <div class="brand">
+          <h1>DERBY<br />01</h1>
+          <p>
+            Paintball demolition derby. Every car has a driver, a mechanic up front and two gunners in the
+            back on the hood and trunk turrets. Bots take every seat no player picks.
+          </p>
+        </div>
+        <section class="cover-credits" aria-labelledby="coverCreditsTitle">
+          <h2 id="coverCreditsTitle">Built with · Credits</h2>
+          <p>
+            Car:
+            <a
+              href="https://bricchi-games.itch.io/retro-car-with-interior"
+              target="_blank"
+              rel="noopener noreferrer"
+              >Retro Car With Interior (PSX asset) — Bricchi Games</a
+            >
+            ·
+            <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer"
+              >CC BY 4.0</a
+            >. Textures repacked for paint and lighting; runtime dents and detachable panels; added interior
+            structure and crew.
+          </p>
+          <p>
+            Fonts:
+            <a href="https://github.com/djrrb/Bungee" target="_blank" rel="noopener noreferrer"
+              >Bungee — The Bungee Project Authors</a
+            >
+            &amp;
+            <a href="https://github.com/jpt/barlow" target="_blank" rel="noopener noreferrer"
+              >Barlow Condensed — The Barlow Project Authors</a
+            >
+            ·
+            <a href="assets/fonts/Bungee-OFL.txt" target="_blank" rel="noopener noreferrer">Bungee licence</a>
+            ·
+            <a href="assets/fonts/BarlowCondensed-OFL.txt" target="_blank" rel="noopener noreferrer"
+              >Barlow Condensed licence</a
+            >
+            · SIL Open Font License 1.1.
+          </p>
+          <p>
+            3D engine:
+            <a href="https://threejs.org/" target="_blank" rel="noopener noreferrer"
+              >three.js — three.js authors</a
+            >
+            · <a href="assets/three-LICENSE.txt" target="_blank" rel="noopener noreferrer">MIT licence</a>.
+            Other sound effects are synthesized by the game.
+          </p>
+          <p>
+            Networking and portable hashing:
+            <a href="https://github.com/matapao/zirbel" target="_blank" rel="noopener noreferrer"
+              >Zirbel — Zirbel contributors</a
+            >
+            · <a href="assets/zirbel-LICENSE.txt" target="_blank" rel="noopener noreferrer">MIT licence</a>.
+            Public SHA-256 implementation bundled without algorithm changes.
+          </p>
+          <p>
+            Paintball marker:
+            <a
+              href="https://freesound.org/people/fabianofa/sounds/98189/"
+              target="_blank"
+              rel="noopener noreferrer"
+              >paintball_shoot1.wav — fabianofa (Freesound)</a
+            >
+            ·
+            <a
+              href="https://creativecommons.org/publicdomain/zero/1.0/"
+              target="_blank"
+              rel="noopener noreferrer"
+              >CC0 1.0</a
+            >. Unmodified HQ MP3 preview; distance gain and slight pitch variation during play.
+          </p>
+          <p id="musicCredits" data-music-credits>
+            Random CC0 music starts after your first click. Track credits appear here during play.
+          </p>
+        </section>
+        <section class="panel" aria-labelledby="playersTitle">
+          <h2 id="playersTitle">Players</h2>
+          <div class="panel-body">
+            <div class="players" id="players"></div>
+            <div class="join" id="join"></div>
+          </div>
+        </section>
+        <section class="panel" aria-labelledby="carsTitle">
+          <h2>
+            <span id="carsTitle">Cars</span>
+            <span class="stepper"
+              ><button class="btn small" id="fewerCars" aria-label="One car fewer">−</button
+              ><b id="carCount" aria-live="polite"></b
+              ><button class="btn small" id="moreCars" aria-label="One more car">+</button></span
+            >
+          </h2>
+          <div class="panel-body cars" id="carList"></div>
+        </section>
+        <div class="row under">
+          <div class="opt">
+            <span class="label">Map <b id="mapName"></b></span
+            ><button class="btn small" id="newMap" title="Lay out a new town">New map</button>
+          </div>
+          <label class="opt"
+            ><span class="label">CPU</span>
+            <select id="botSkill">
+              <option value="0">Easy</option>
+              <option value="1">Normal</option>
+              <option value="2">Hard</option>
+            </select></label
+          >
+        </div>
+        <div class="points-info">
+          <b>Points</b> · damage you do · wreck a car +250 · <b>the radar is the headshot</b>: +5 a hit,
+          <b>+150 for knocking it off</b> · <b>burns</b>: throw it into a drift or a donut (handbrake, or full
+          lock on full throttle) and hold it, the longer the more (crash first and it's lost) · last car
+          standing +200
+        </div>
+        <div class="startbar">
+          <div class="summary" id="summary"></div>
+          <button class="start" id="startBtn">START</button>
+        </div>
+        <details class="help">
+          <summary>Controls</summary>
+          <table>
+            <tr>
+              <td></td>
+              <th scope="col">Driver</th>
+              <th scope="col">Gunners (hood &amp; trunk, from the back seat)</th>
+              <th scope="col">Mechanic</th>
+              <th scope="col">Everyone</th>
+            </tr>
+            <tr>
+              <th scope="row">Keyboard + Mouse</th>
+              <td>
+                <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> drive · <kbd>Space</kbd> handbrake ·
+                <kbd>Shift</kbd> nitro · <kbd>V</kbd> cockpit / chase cam
+              </td>
+              <td>
+                Mouse aim · <kbd>Click</kbd> fire · <kbd>Right click</kbd> zoom · jammed: <kbd>W</kbd
+                ><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>
+              </td>
+              <td>
+                <kbd>W</kbd>/<kbd>S</kbd> pick a job · <kbd>Space</kbd> start · <kbd>Shift</kbd> drop it ·
+                jobs use <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> + <kbd>Space</kbd>
+              </td>
+              <td><kbd>C</kbd> change seat · <kbd>Esc</kbd> pause</td>
+            </tr>
+            <tr>
+              <th scope="row">Keys: WASD</th>
+              <td>
+                <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> · <kbd>Space</kbd> handbrake ·
+                <kbd>Shift</kbd> nitro · <kbd>V</kbd> camera
+              </td>
+              <td><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> aim · <kbd>Space</kbd> fire</td>
+              <td><kbd>W</kbd>/<kbd>S</kbd> pick · <kbd>Space</kbd> start · <kbd>Shift</kbd> drop it</td>
+              <td><kbd>C</kbd> change seat</td>
+            </tr>
+            <tr>
+              <th scope="row">Keys: Arrows</th>
+              <td>Arrows · <kbd>Enter</kbd> handbrake · <kbd>R-Shift</kbd> nitro · <kbd>,</kbd> camera</td>
+              <td>Arrows aim · <kbd>Enter</kbd> fire</td>
+              <td><kbd>↑</kbd>/<kbd>↓</kbd> pick · <kbd>Enter</kbd> start · <kbd>R-Shift</kbd> drop it</td>
+              <td><kbd>.</kbd> change seat</td>
+            </tr>
+            <tr>
+              <th scope="row">Mouse only</th>
+              <td>Move = steer · <kbd>Left</kbd> gas · <kbd>Right</kbd> brake</td>
+              <td>Aim · <kbd>Left</kbd> fire</td>
+              <td>
+                <kbd>Wheel</kbd> pick · <kbd>Left</kbd> start · <kbd>Right</kbd> drop it · flick the mouse for
+                arrows
+              </td>
+              <td><kbd>Middle</kbd> change seat</td>
+            </tr>
+            <tr>
+              <th scope="row">Gamepad</th>
+              <td>
+                Left stick steer · <kbd>RT</kbd> gas · <kbd>LT</kbd> brake · <kbd>A</kbd> handbrake ·
+                <kbd>X</kbd> nitro · <kbd>B</kbd> camera
+              </td>
+              <td>Right stick aim · <kbd>RT</kbd> fire · <kbd>LT</kbd> zoom</td>
+              <td>Stick / d-pad pick · <kbd>A</kbd> start · <kbd>B</kbd> drop it</td>
+              <td><kbd>Y</kbd> change seat · <kbd>Start</kbd> pause</td>
+            </tr>
+            <tr>
+              <th scope="row">Touch</th>
+              <td>
+                Left thumb steers · <kbd>Gas</kbd> <kbd>Brake</kbd> <kbd>Nitro</kbd>
+                <kbd>Handbrake</kbd> under the right thumb (slide between them) · <kbd>Cam</kbd> camera
+              </td>
+              <td>
+                Drag to aim · hold <kbd>Fire</kbd> (slide it to aim too) · <kbd>Zoom</kbd> · jammed: the
+                arrows
+              </td>
+              <td>
+                Tap a job, tap it again to start · then tap, hold, swipe or drag the screen as the job says ·
+                <kbd>✕ Drop</kbd> drop it
+              </td>
+              <td><kbd>Seat</kbd> change seat · <kbd>❚❚</kbd> pause</td>
+            </tr>
+          </table>
+          <div class="about">
+            <p>
+              The driver sits front left and the mechanic front right, with two screens on the dash: one for
+              the car, one for the jobs. The two in the back are the gunners: they wear camera goggles and
+              work the remote turrets on the hood and the trunk lid, watching the feed from the camera on each
+              turret. Changing seat swaps you with a bot.
+            </p>
+            <p>
+              Every car is built its own way (stock, rally, drift, sport or muscle: pick it next to the car's
+              row) and drives its own way; the add-on parts fly off when that side takes a beating. Nitro
+              gives a burst of speed. Lamp posts, trees and bollards give way if you hit them hard enough;
+              trees break into logs you can shove about.
+            </p>
+            <p>
+              The markers fire paintballs in an arc (the gun lobs them onto your crosshair) that splat over
+              cars, the ground and the buildings. Paint on the windshield and the turret cameras blocks the
+              view until the wipers clear it. The guns heat up while firing and a hot gun can jam: the gunner
+              clears it by pressing the directions shown. Hits crack the windows, dent the panels and tear the
+              rubber bumpers off.
+            </p>
+            <p>
+              The mechanic fixes what breaks in short games on the job screen, and puts out fires with the
+              extinguisher (aim at the base of the flames, spray in bursts). Supply drops (fuel, spare tyres,
+              bumpers, windscreens) turn up around the town: drive over one to grab it.
+            </p>
+            <p>
+              A radar spins on every roof and drives the radar screen in the corner. Shoot an enemy's radar
+              off and their screen goes dark until their mechanic fixes it: that's the headshot.
+            </p>
+          </div>
+          <div class="pads" id="padInfo"></div>
+        </details>
+      </div>
+    </div>
+
+    <div id="pause" class="screen hidden">
+      <div class="card">
+        <h2>PAUSED</h2>
+        <p class="pause-note" id="pauseNote" role="status"></p>
+        <button class="btn" id="resumeBtn">Resume</button>
+        <button class="btn" data-fullscreen hidden>Full screen</button>
+        <button class="btn" id="restartBtn">Restart round</button>
+        <button class="btn" id="setupBtn">Back to setup</button>
+      </div>
+    </div>
+
+    <div id="netWait" class="screen hidden">
+      <div class="card wait">
+        <h2>DERBY 01</h2>
+        <p class="wait-status">Connecting to the host…</p>
+        <div class="wait-cars"></div>
+        <button class="btn" data-fullscreen hidden>Full screen</button>
+      </div>
+    </div>
+    <div id="netStatus" class="hidden" role="status" aria-live="polite"></div>
+
+    <div id="hud"></div>
+    <div id="scores"></div>
+    <div id="feed"></div>
+    <div id="center"></div>
+
+    <!-- Touch controls (src/touch.ts): laid out for the seat of whoever plays by touch, over their view -->
+    <div id="touch" hidden>
+      <div class="t-steer" aria-hidden="true"><i></i></div>
+      <div class="t-dpad" aria-hidden="true">
+        <b data-dir="up"></b><b data-dir="left"></b><b data-dir="right"></b><b data-dir="down"></b>
+      </div>
+      <div class="t-jobs" aria-hidden="true"></div>
+      <button type="button" tabindex="-1" class="tb t-pause" data-touch="pause" aria-label="Pause"></button>
+      <button type="button" tabindex="-1" class="tb t-seat" data-touch="seat">Seat</button>
+      <button type="button" tabindex="-1" class="tb t-cam" data-touch="cam" aria-label="Camera">Cam</button>
+      <button type="button" tabindex="-1" class="tb t-hand" data-pedal="hand">Hand&shy;brake</button>
+      <button type="button" tabindex="-1" class="tb t-nitro" data-pedal="nitro">Nitro</button>
+      <button type="button" tabindex="-1" class="tb t-brake" data-pedal="brake">Brake</button>
+      <button type="button" tabindex="-1" class="tb t-gas big" data-pedal="gas">Gas</button>
+      <button type="button" tabindex="-1" class="tb t-zoom" data-touch="zoom">Zoom</button>
+      <button type="button" tabindex="-1" class="tb t-fire big" data-touch="fire">Fire</button>
+      <button type="button" tabindex="-1" class="tb t-drop" data-touch="drop">✕ Drop</button>
+      <p class="t-turn">Turn your phone sideways<small>The dash needs the room</small></p>
+    </div>
+
+    <script type="module" src="main.js"></script>
+  </body>
+</html>

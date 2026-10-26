@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.DS_Store
+*.log
+
+# Local credentials and environment overrides must never enter the public tree.
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.pem
+*.key

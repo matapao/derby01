@@ -1,0 +1,8 @@
+{
+  "damage": 1,
+  "wreck": 250,
+  "radarHit": 5,
+  "radar": 150,
+  "win": 200,
+  "burn": { "min": 1.2, "rate": 15, "grow": 3, "max": 10, "grace": 0.5, "crash": 5, "announce": 120 }
+}

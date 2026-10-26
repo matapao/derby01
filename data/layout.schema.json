@@ -1,0 +1,415 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "layout.schema.json",
+  "title": "derby01: a town",
+  "description": "A town as data: the edge cars can't leave, the painted ground, the streets and their markings, the placed pieces (buildings, trees, lamp posts, ramps, drop pads), prefabs, walls, start slots, the drop zones and the scenery outside. The town generator writes this for any map number and number of cars; edit one or write your own. Metres: x runs east, z runs south; a yaw of 0 faces south (+z), 1.5708 east.",
+  "type": "object",
+  "required": ["id", "seed", "size", "bounds"],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "$ref": "common.schema.json#/$defs/id", "description": "The town's id." },
+    "about": {
+      "type": "string",
+      "maxLength": 400,
+      "description": "What the town is like, for people and agents."
+    },
+    "from": {
+      "type": "object",
+      "description": "Where it came from, if the generator made it.",
+      "required": ["generator", "seed"],
+      "additionalProperties": false,
+      "properties": {
+        "generator": { "const": "town", "description": "The town generator." },
+        "seed": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 99999,
+          "description": "The map number it was laid out from."
+        },
+        "cars": {
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 8,
+          "description": "The number of cars it was sized for."
+        }
+      }
+    },
+    "seed": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 99999,
+      "description": "Seeds the details nobody places by hand: grain, patches and manholes on the tarmac, the size of each tree's crown, the farms and woods outside town."
+    },
+    "size": {
+      "type": "object",
+      "description": "The painted ground: a rectangle that holds the whole town. Beyond it the land rolls on.",
+      "required": ["x0", "z0", "w", "h"],
+      "additionalProperties": false,
+      "properties": {
+        "x0": { "$ref": "common.schema.json#/$defs/x", "description": "Its west edge." },
+        "z0": { "$ref": "common.schema.json#/$defs/z", "description": "Its north edge." },
+        "w": {
+          "type": "number",
+          "minimum": 20,
+          "maximum": 600,
+          "description": "Its width (east-west), in metres."
+        },
+        "h": {
+          "type": "number",
+          "minimum": 20,
+          "maximum": 600,
+          "description": "Its depth (north-south), in metres."
+        }
+      }
+    },
+    "bounds": {
+      "type": "object",
+      "description": "The edge of the town: cars can't leave it, and it stops paintballs up to a height.",
+      "required": ["poly", "wall"],
+      "additionalProperties": false,
+      "properties": {
+        "poly": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 64,
+          "description": "The edge, corner by corner (a convex shape keeps the bots happiest).",
+          "items": { "$ref": "common.schema.json#/$defs/point", "description": "A corner." }
+        },
+        "wall": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 10,
+          "description": "How high the edge stops paintballs, in metres."
+        }
+      }
+    },
+    "ground": {
+      "type": "array",
+      "maxItems": 200,
+      "description": "Painted ground, drawn in order over grass (later areas cover earlier ones). Grass is slower and slidier than the rest.",
+      "items": { "$ref": "#/$defs/ground" }
+    },
+    "roads": {
+      "type": "array",
+      "maxItems": 100,
+      "description": "Streets: a strip of tarmac along a line, with a dashed yellow centre line that stops short of junctions. The ground is painted over the strips (so an island can sit in a street).",
+      "items": {
+        "type": "object",
+        "required": ["line"],
+        "additionalProperties": false,
+        "properties": {
+          "line": { "$ref": "common.schema.json#/$defs/line", "description": "The street's middle." },
+          "width": {
+            "type": "number",
+            "minimum": 3,
+            "maximum": 20,
+            "description": "Tarmac width in metres. Default 7: two 3.5 m lanes."
+          },
+          "ring": { "type": "boolean", "description": "Part of the ring road round the town." },
+          "centre": { "type": "boolean", "description": "Draw the dashed centre line. Default true." }
+        }
+      }
+    },
+    "junctions": {
+      "type": "array",
+      "maxItems": 200,
+      "description": "Where streets meet: centre lines stop short of them.",
+      "items": { "$ref": "common.schema.json#/$defs/point", "description": "A junction." }
+    },
+    "markings": {
+      "type": "array",
+      "maxItems": 200,
+      "description": "Paint on the ground.",
+      "items": { "$ref": "#/$defs/marking" }
+    },
+    "pieces": {
+      "type": "array",
+      "maxItems": 1500,
+      "description": "Placed pieces from data/pieces.json.",
+      "items": { "$ref": "#/$defs/placement" }
+    },
+    "prefabs": {
+      "type": "array",
+      "maxItems": 200,
+      "description": "Placed prefabs from data/prefabs.json: their pieces, ground and markings, moved and turned as one.",
+      "items": {
+        "type": "object",
+        "required": ["prefab", "x", "z"],
+        "additionalProperties": false,
+        "properties": {
+          "prefab": { "type": "string", "x-zirbel-ref": "prefabs", "description": "A prefab's id." },
+          "x": { "$ref": "common.schema.json#/$defs/x", "description": "Where its middle goes." },
+          "z": { "$ref": "common.schema.json#/$defs/z", "description": "Where its middle goes." },
+          "yaw": { "$ref": "common.schema.json#/$defs/yaw", "description": "Which way it faces. Default 0." }
+        }
+      }
+    },
+    "walls": {
+      "type": "array",
+      "maxItems": 200,
+      "description": "Hedges and low concrete walls along a line.",
+      "items": { "$ref": "#/$defs/wall" }
+    },
+    "barriers": {
+      "type": "array",
+      "maxItems": 50,
+      "description": "Red and white road barriers on posts, where a street is closed (for looks: the edge stops the cars).",
+      "items": { "$ref": "#/$defs/barrier" }
+    },
+    "exits": {
+      "type": "array",
+      "maxItems": 8,
+      "description": "Where a street leaves town through the edge: the scenery carries the road on into the countryside.",
+      "items": {
+        "type": "object",
+        "required": ["x", "z", "yaw"],
+        "additionalProperties": false,
+        "properties": {
+          "x": { "$ref": "common.schema.json#/$defs/x", "description": "Where the road crosses the edge." },
+          "z": { "$ref": "common.schema.json#/$defs/z", "description": "Where the road crosses the edge." },
+          "yaw": { "$ref": "common.schema.json#/$defs/yaw", "description": "The way it leaves." }
+        }
+      }
+    },
+    "regions": {
+      "type": "array",
+      "maxItems": 40,
+      "description": "Named parts of the town, for people and agents (look() labels them). The engine doesn't need them.",
+      "items": {
+        "type": "object",
+        "required": ["name", "kind", "poly"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string", "minLength": 1, "maxLength": 24, "description": "What to call it." },
+          "kind": {
+            "enum": ["square", "park", "lot", "offices"],
+            "description": "What sort of place: an open square, a park, a car park, or office blocks."
+          },
+          "poly": { "$ref": "common.schema.json#/$defs/poly", "description": "Its outline." }
+        }
+      }
+    },
+    "spawns": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 8,
+      "description": "Start slots, shuffled each round: a car takes one while there are slots, and any more cars start at random spots on the tarmac, well apart. Without them every car starts at a random spot. Keep slots on clear tarmac, inside the edge and apart.",
+      "items": {
+        "type": "object",
+        "required": ["x", "z", "yaw"],
+        "additionalProperties": false,
+        "properties": {
+          "x": { "$ref": "common.schema.json#/$defs/x", "description": "Where the car's middle starts." },
+          "z": { "$ref": "common.schema.json#/$defs/z", "description": "Where the car's middle starts." },
+          "yaw": { "$ref": "common.schema.json#/$defs/yaw", "description": "Which way it faces." }
+        }
+      }
+    },
+    "zones": {
+      "type": "array",
+      "maxItems": 40,
+      "description": "Where supply drops may land (drops), and where they may not (noDrops). Without any drops zone they land anywhere paved; with drop pads, only on the pads.",
+      "items": {
+        "type": "object",
+        "required": ["kind", "poly"],
+        "additionalProperties": false,
+        "properties": {
+          "kind": { "enum": ["drops", "noDrops"], "description": "Drops may land here, or may not." },
+          "poly": { "$ref": "common.schema.json#/$defs/poly", "description": "The zone." }
+        }
+      }
+    },
+    "camera": {
+      "type": "object",
+      "description": "The camera that circles slowly over the town behind the start screen.",
+      "required": ["x", "z", "rx", "rz", "h"],
+      "additionalProperties": false,
+      "properties": {
+        "x": { "$ref": "common.schema.json#/$defs/x", "description": "The middle of its circle." },
+        "z": { "$ref": "common.schema.json#/$defs/z", "description": "The middle of its circle." },
+        "rx": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 300,
+          "description": "How far it swings east and west."
+        },
+        "rz": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 300,
+          "description": "How far it swings north and south."
+        },
+        "h": { "type": "number", "minimum": 5, "maximum": 200, "description": "How high it flies." }
+      }
+    },
+    "backdrop": {
+      "enum": ["valley", "none"],
+      "description": "The scenery outside the edge: valley (farms and woods up the hill, a fjord and mountains), or none (grass to the horizon)."
+    }
+  },
+  "$defs": {
+    "ground": {
+      "type": "object",
+      "required": ["surface", "poly"],
+      "additionalProperties": false,
+      "properties": {
+        "surface": {
+          "enum": ["road", "pave", "lot", "grass"],
+          "description": "Tarmac (road), pavement (pave), car park (lot) or grass."
+        },
+        "poly": { "$ref": "common.schema.json#/$defs/poly", "description": "The area." },
+        "kerb": { "type": "boolean", "description": "A kerb round its edge (looks only)." }
+      }
+    },
+    "marking": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["type", "x", "z", "yaw", "n", "rows"],
+          "additionalProperties": false,
+          "description": "Parking bays: double rows of 2.5 × 5 m stalls, 10 m wide, with blue and green bays at the ends.",
+          "properties": {
+            "type": { "const": "bays", "description": "Parking bays." },
+            "x": {
+              "$ref": "common.schema.json#/$defs/x",
+              "description": "The middle of the first double row."
+            },
+            "z": {
+              "$ref": "common.schema.json#/$defs/z",
+              "description": "The middle of the first double row."
+            },
+            "yaw": { "$ref": "common.schema.json#/$defs/yaw", "description": "The way the rows run." },
+            "n": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 40,
+              "description": "Stalls along each side of a double row."
+            },
+            "rows": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4,
+              "description": "Double rows side by side, 16.5 m apart, with arrows in the aisles between."
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["type", "poly"],
+          "additionalProperties": false,
+          "description": "Yellow hatching: a fire lane to keep clear.",
+          "properties": {
+            "type": { "const": "hatch", "description": "Hatching." },
+            "poly": { "$ref": "common.schema.json#/$defs/poly", "description": "The hatched area." }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["type", "line", "depth"],
+          "additionalProperties": false,
+          "description": "A zebra crossing.",
+          "properties": {
+            "type": { "const": "zebra", "description": "A zebra crossing." },
+            "line": {
+              "type": "array",
+              "description": "From one kerb to the other.",
+              "prefixItems": [
+                { "$ref": "common.schema.json#/$defs/point", "description": "One end." },
+                { "$ref": "common.schema.json#/$defs/point", "description": "The other end." }
+              ],
+              "items": false,
+              "minItems": 2,
+              "maxItems": 2
+            },
+            "depth": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 8,
+              "description": "How long the stripes are, in metres."
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["type", "x", "z", "yaw"],
+          "additionalProperties": false,
+          "description": "Give-way teeth across the lane, just before a junction.",
+          "properties": {
+            "type": { "const": "giveWay", "description": "Give way." },
+            "x": { "$ref": "common.schema.json#/$defs/x", "description": "The junction." },
+            "z": { "$ref": "common.schema.json#/$defs/z", "description": "The junction." },
+            "yaw": {
+              "$ref": "common.schema.json#/$defs/yaw",
+              "description": "The way the drivers who must wait are heading."
+            }
+          }
+        }
+      ]
+    },
+    "placement": {
+      "type": "object",
+      "required": ["piece", "x", "z"],
+      "additionalProperties": false,
+      "properties": {
+        "piece": {
+          "type": "string",
+          "x-zirbel-ref": "pieces",
+          "description": "A piece's id from data/pieces.json."
+        },
+        "x": { "$ref": "common.schema.json#/$defs/x", "description": "Where its middle stands." },
+        "z": { "$ref": "common.schema.json#/$defs/z", "description": "Where its middle stands." },
+        "yaw": { "$ref": "common.schema.json#/$defs/yaw", "description": "Which way it faces. Default 0." },
+        "w": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 120,
+          "description": "Width across its yaw, for pieces that take one (within the piece's limits)."
+        },
+        "l": { "type": "number", "minimum": 0.1, "maximum": 120, "description": "Length along its yaw." },
+        "h": { "type": "number", "minimum": 0.1, "maximum": 40, "description": "Height." },
+        "r": { "type": "number", "minimum": 0.05, "maximum": 20, "description": "Radius." },
+        "outer": { "type": "boolean", "description": "Stands outside the edge where no car goes (scenery)." }
+      }
+    },
+    "wall": {
+      "type": "object",
+      "required": ["kind", "line"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": ["hedge", "wall"],
+          "description": "A clipped hedge (1.4 m thick, 2.6 m high) or a low concrete wall (0.6 m thick, 0.9 m high)."
+        },
+        "line": { "$ref": "common.schema.json#/$defs/line", "description": "Its middle line." },
+        "h": {
+          "type": "number",
+          "minimum": 0.3,
+          "maximum": 6,
+          "description": "Its height, if not the usual."
+        },
+        "collide": {
+          "type": "boolean",
+          "description": "Cars hit it. Default true; scenery outside the edge needn't."
+        }
+      }
+    },
+    "barrier": {
+      "type": "object",
+      "required": ["line"],
+      "additionalProperties": false,
+      "properties": {
+        "line": {
+          "type": "array",
+          "description": "From one end of the bar to the other.",
+          "prefixItems": [
+            { "$ref": "common.schema.json#/$defs/point", "description": "One end." },
+            { "$ref": "common.schema.json#/$defs/point", "description": "The other end." }
+          ],
+          "items": false,
+          "minItems": 2,
+          "maxItems": 2
+        }
+      }
+    }
+  }
+}

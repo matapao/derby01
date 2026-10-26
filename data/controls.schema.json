@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "controls.schema.json",
+  "title": "derby01: controls",
+  "description": "How fast the turrets turn for each kind of controller. Driving and the mechanic's games read the controls directly.",
+  "type": "object",
+  "required": ["mouse", "keys", "pad", "flick"],
+  "additionalProperties": false,
+  "properties": {
+    "mouse": {
+      "type": "number",
+      "minimum": 0.0005,
+      "maximum": 0.01,
+      "description": "Radians the turret turns per pixel the mouse moves."
+    },
+    "keys": {
+      "type": "object",
+      "description": "Aiming with keys.",
+      "required": ["yaw", "pitch"],
+      "additionalProperties": false,
+      "properties": {
+        "yaw": {
+          "type": "number",
+          "minimum": 0.3,
+          "maximum": 5,
+          "description": "Radians a second left and right."
+        },
+        "pitch": {
+          "type": "number",
+          "minimum": 0.2,
+          "maximum": 4,
+          "description": "Radians a second up and down."
+        }
+      }
+    },
+    "pad": {
+      "type": "object",
+      "description": "Aiming with a gamepad's stick.",
+      "required": ["yaw", "pitch", "deadzone"],
+      "additionalProperties": false,
+      "properties": {
+        "yaw": {
+          "type": "number",
+          "minimum": 0.3,
+          "maximum": 8,
+          "description": "Radians a second left and right at full stick."
+        },
+        "pitch": {
+          "type": "number",
+          "minimum": 0.2,
+          "maximum": 6,
+          "description": "Radians a second up and down at full stick."
+        },
+        "deadzone": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 0.5,
+          "description": "Stick travel that is ignored."
+        }
+      }
+    },
+    "flick": {
+      "type": "number",
+      "minimum": 4,
+      "maximum": 80,
+      "description": "Mouse-only players: pixels a quick flick must move to count as a direction press."
+    }
+  }
+}

@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "guns.schema.json",
+  "title": "derby01: the paintball markers",
+  "description": "Both turrets are paintball markers. The balls fly in an arc (the gun lofts them onto the crosshair) and every hit splats in the team's colour. The marker barely cools while firing, so holding the trigger overheats it in about three seconds, and a hot marker can jam until its gunner clears it.",
+  "type": "object",
+  "required": [
+    "rate",
+    "dmg",
+    "spread",
+    "speed",
+    "gravity",
+    "life",
+    "heat",
+    "cool",
+    "coolFiring",
+    "recover",
+    "hot",
+    "hotSpray",
+    "jamOnOverheat",
+    "jamWhenHot",
+    "zoomSpread",
+    "radar"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "rate": {
+      "type": "number",
+      "minimum": 2,
+      "maximum": 15,
+      "description": "Balls a second while the trigger is held."
+    },
+    "dmg": {
+      "type": "number",
+      "minimum": 0.2,
+      "maximum": 3,
+      "description": "Damage a ball does where it hits (before the bumpers, the zone and the car's toughness). Bots' balls do less (bots.json)."
+    },
+    "spread": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 0.05,
+      "description": "How much a ball wanders off the line, in radians: a hot barrel sprays more."
+    },
+    "speed": {
+      "type": "number",
+      "minimum": 40,
+      "maximum": 140,
+      "description": "How fast a ball leaves the barrel, in m/s. At most 140: the screens send ball speeds up to 150 m/s."
+    },
+    "gravity": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 20,
+      "description": "How fast the balls drop, in m/s². The gun lofts its shots to make up for it."
+    },
+    "life": {
+      "type": "number",
+      "minimum": 0.5,
+      "maximum": 4,
+      "description": "Seconds a ball flies before it is gone."
+    },
+    "heat": {
+      "type": "number",
+      "minimum": 0.01,
+      "maximum": 0.2,
+      "description": "Heat each shot adds (1 = overheated): 0.045 overheats after 22 shots."
+    },
+    "cool": {
+      "type": "number",
+      "minimum": 0.05,
+      "maximum": 2,
+      "description": "Heat lost each second with the trigger let go."
+    },
+    "coolFiring": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "The share of cool that still happens while firing."
+    },
+    "recover": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 0.95,
+      "description": "An overheated gun fires again when its heat is back under this."
+    },
+    "hot": {
+      "type": "number",
+      "minimum": 0.3,
+      "maximum": 1,
+      "description": "Above this heat every shot may jam the gun (jamWhenHot)."
+    },
+    "hotSpray": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 3,
+      "description": "How much more a hot barrel sprays: spread × (1 + heat × this)."
+    },
+    "jamOnOverheat": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Chance that overheating jams the gun."
+    },
+    "jamWhenHot": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 0.2,
+      "description": "Chance per shot of a jam while the gun is hot."
+    },
+    "zoomSpread": {
+      "type": "number",
+      "minimum": 0.1,
+      "maximum": 1,
+      "description": "Zoomed in, the spread is multiplied by this."
+    },
+    "radar": {
+      "type": "object",
+      "description": "Paintballs on the roof radar.",
+      "required": ["hit", "splash", "splashRadius"],
+      "additionalProperties": false,
+      "properties": {
+        "hit": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10,
+          "description": "A ball on the radar's head does this many times its damage to the radar (and none to the car)."
+        },
+        "splash": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 5,
+          "description": "A ball on the roof next to the radar does this many times its damage to it."
+        },
+        "splashRadius": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1.5,
+          "description": "How close to the radar a roof hit must be to splash it, in metres."
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,721 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "mechanic.schema.json",
+  "title": "derby01: the mechanic",
+  "description": "The car's systems (fuel, fire, tyres, axles) and the mechanic who keeps them going. The mechanic sees a list of jobs, most urgent first; each job is played as a quick mini-game, and some use up a spare (a fuel can, a tyre, bumper pieces, a windscreen) that supply drops refill. Bot mechanics take a set time per job instead. Agents in the mechanic's seat take as long as a skilled person needs for each game, worked out from the tuning here.",
+  "type": "object",
+  "required": ["spares", "systems", "jobs", "games"],
+  "additionalProperties": false,
+  "properties": {
+    "spares": {
+      "type": "object",
+      "description": "Spare parts on board.",
+      "required": ["start", "max", "canFuel"],
+      "additionalProperties": false,
+      "properties": {
+        "start": {
+          "$ref": "#/$defs/stock",
+          "description": "What every car starts a round with."
+        },
+        "max": {
+          "$ref": "#/$defs/stock",
+          "description": "The most a car can carry. At least what it starts with."
+        },
+        "canFuel": {
+          "type": "number",
+          "minimum": 10,
+          "maximum": 100,
+          "description": "How much of the tank (in %) one fuel can fills."
+        }
+      }
+    },
+    "systems": {
+      "type": "object",
+      "description": "What wears and burns on its own.",
+      "required": ["fuel", "fire", "tyres", "broken"],
+      "additionalProperties": false,
+      "properties": {
+        "fuel": {
+          "type": "object",
+          "description": "Fuel used, in % of the tank per second.",
+          "required": ["idle", "throttle", "boost", "leak"],
+          "additionalProperties": false,
+          "properties": {
+            "idle": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 2,
+              "description": "With the engine running."
+            },
+            "throttle": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 3,
+              "description": "More at full throttle (either way)."
+            },
+            "boost": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 10,
+              "description": "More on nitro."
+            },
+            "leak": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 10,
+              "description": "More from a holed tank."
+            }
+          }
+        },
+        "fire": {
+          "type": "object",
+          "description": "Fires: they grow a level at a time (to three) until someone puts them out, burning the engine and the chassis.",
+          "required": ["grow", "growLeaking", "engine", "chassis", "fromEngineBelow", "fromEngine"],
+          "additionalProperties": false,
+          "properties": {
+            "grow": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 30,
+              "description": "Seconds before a fire grows a level (there are three)."
+            },
+            "growLeaking": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 30,
+              "description": "The same with a leaking tank."
+            },
+            "engine": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 5,
+              "description": "Engine damage per second per fire level."
+            },
+            "chassis": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 5,
+              "description": "Chassis damage per second per fire level."
+            },
+            "fromEngineBelow": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 60,
+              "description": "An engine below this (in %) can catch fire."
+            },
+            "fromEngine": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 0.5,
+              "description": "Chance per second that a dying engine catches fire (at 0 %)."
+            }
+          }
+        },
+        "tyres": {
+          "type": "object",
+          "description": "Tyre wear (a tyre has 100; at 0 it bursts, and driving on the rim takes the wheel off).",
+          "required": ["slideRear", "slideFront", "rim"],
+          "additionalProperties": false,
+          "properties": {
+            "slideRear": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Wear per second on the rear tyres while sliding."
+            },
+            "slideFront": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Wear per second on the front tyres while sliding."
+            },
+            "rim": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 3,
+              "description": "How fast a rim grinds down on a flat, per m/s of speed (a rim has 100)."
+            }
+          }
+        },
+        "broken": {
+          "type": "object",
+          "description": "How broken parts change the driving.",
+          "required": ["lowPower", "flatSpeed", "flatGrip", "rearAxle", "frontAxle", "pull", "wobble"],
+          "additionalProperties": false,
+          "properties": {
+            "lowPower": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "Power left with the engine at 1 % (it rises to full at 100 %)."
+            },
+            "flatSpeed": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 0.3,
+              "description": "Top speed lost per flat tyre (a lost wheel counts two)."
+            },
+            "flatGrip": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 0.3,
+              "description": "Grip lost per flat tyre (a lost wheel counts two)."
+            },
+            "rearAxle": {
+              "type": "number",
+              "minimum": 0.1,
+              "maximum": 1,
+              "description": "Power left with the rear axle broken."
+            },
+            "frontAxle": {
+              "type": "number",
+              "minimum": 0.1,
+              "maximum": 1,
+              "description": "Steering left with the front axle broken."
+            },
+            "pull": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 0.3,
+              "description": "How hard flats on one side pull the car that way."
+            },
+            "wobble": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 0.4,
+              "description": "How much a broken front axle shakes the steering."
+            }
+          }
+        }
+      }
+    },
+    "jobs": {
+      "type": "object",
+      "description": "The mechanic's jobs: which mini-game each is played with, when it shows up, what it fixes, and how long a bot takes.",
+      "required": [
+        "fire",
+        "engine",
+        "fuel",
+        "leak",
+        "axle",
+        "tyre",
+        "bumper",
+        "glass",
+        "radar",
+        "chassis",
+        "panel"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "fire": {
+          "$ref": "#/$defs/job",
+          "description": "Put out a fire."
+        },
+        "engine": {
+          "$ref": "#/$defs/job",
+          "description": "Repair the engine: shows below 'below' %, adds 'fix' %."
+        },
+        "fuel": {
+          "$ref": "#/$defs/job",
+          "description": "Refuel from a can: shows below 'below' %. Uses a fuel can."
+        },
+        "leak": {
+          "$ref": "#/$defs/job",
+          "description": "Patch a leaking tank."
+        },
+        "axle": {
+          "$ref": "#/$defs/job",
+          "description": "Fix a broken axle."
+        },
+        "tyre": {
+          "$ref": "#/$defs/job",
+          "description": "Change a worn (below 'below'), flat or lost tyre. Uses a spare tyre."
+        },
+        "bumper": {
+          "$ref": "#/$defs/job",
+          "description": "Fit bumper pieces. Uses one spare per piece."
+        },
+        "glass": {
+          "$ref": "#/$defs/job",
+          "description": "Replace a cracked windshield (cracked more than 'above', 0 to 1). Uses a windscreen."
+        },
+        "radar": {
+          "$ref": "#/$defs/job",
+          "description": "Repair a damaged radar (below 'below' of its health) or rebuild one that was knocked off."
+        },
+        "chassis": {
+          "$ref": "#/$defs/job",
+          "description": "Beat out dents: shows when the chassis is 'gap' below what it can be repaired to, adds 'fix'."
+        },
+        "panel": {
+          "type": "object",
+          "description": "Tighten the hinges and latch on a still-attached loose door, hood or trunk lid. Uses no spare.",
+          "required": ["game", "bot", "urgency"],
+          "additionalProperties": false,
+          "properties": {
+            "game": {
+              "enum": ["nuts"],
+              "description": "The quick nuts game tightens panel hinges."
+            },
+            "bot": {
+              "type": "number",
+              "minimum": 1.5,
+              "maximum": 10,
+              "description": "Simulation seconds a normal-speed bot takes to tighten a panel."
+            },
+            "urgency": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100,
+              "description": "Task priority relative to other mechanic jobs."
+            }
+          }
+        }
+      }
+    },
+    "games": {
+      "type": "object",
+      "description": "The mini-games' tuning. Each comes back to the screen it is played on; the host checks the result.",
+      "required": ["glue", "nuts", "hammer", "dial", "spray", "pour", "dents", "radar", "glass", "unjam"],
+      "additionalProperties": false,
+      "properties": {
+        "glue": {
+          "type": "object",
+          "description": "Hold the action button to heat the glue and keep it in the green band while the seam fuses.",
+          "required": ["start", "heat", "cool", "low", "high", "held", "idle", "burn"],
+          "additionalProperties": false,
+          "properties": {
+            "start": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 0.5,
+              "description": "Heat at the start (1 = too hot)."
+            },
+            "heat": {
+              "type": "number",
+              "minimum": 0.2,
+              "maximum": 3,
+              "description": "Heat gained per second while held."
+            },
+            "cool": {
+              "type": "number",
+              "minimum": 0.1,
+              "maximum": 3,
+              "description": "Heat lost per second when let go."
+            },
+            "low": {
+              "type": "number",
+              "minimum": 0.1,
+              "maximum": 0.9,
+              "description": "Bottom of the green band."
+            },
+            "high": {
+              "type": "number",
+              "minimum": 0.2,
+              "maximum": 0.99,
+              "description": "Top of the green band. More than low."
+            },
+            "held": {
+              "type": "number",
+              "minimum": 0.05,
+              "maximum": 2,
+              "description": "Seam fused per second in the green with the torch on (1 = done)."
+            },
+            "idle": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 2,
+              "description": "Seam fused per second in the green with it off."
+            },
+            "burn": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "Progress lost by overheating."
+            }
+          }
+        },
+        "nuts": {
+          "type": "object",
+          "description": "Press the direction shown on each wheel nut, then tap to bolt the spare on.",
+          "required": ["nuts", "taps", "pause", "panelNuts", "panelTaps", "panelPause", "panelTime"],
+          "additionalProperties": false,
+          "properties": {
+            "nuts": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10,
+              "description": "Nuts to undo."
+            },
+            "taps": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10,
+              "description": "Taps to bolt the spare on."
+            },
+            "pause": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 2,
+              "description": "Seconds lost on a wrong direction."
+            },
+            "panelNuts": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4,
+              "description": "Directional hinge fasteners for the quick loose-panel job; tyre sequences are unchanged."
+            },
+            "panelTaps": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4,
+              "description": "Final latch taps for a loose-panel job."
+            },
+            "panelPause": {
+              "type": "number",
+              "minimum": 0.05,
+              "maximum": 1,
+              "description": "Seconds of input lock after a wrong panel direction."
+            },
+            "panelTime": {
+              "type": "number",
+              "minimum": 1.5,
+              "maximum": 5,
+              "description": "Minimum simulation seconds to complete panel tightening, including a final latch check."
+            }
+          }
+        },
+        "hammer": {
+          "type": "object",
+          "description": "Tap when the swinging marker is in the green.",
+          "required": ["speed", "zone", "speedup", "hits", "axleHits"],
+          "additionalProperties": false,
+          "properties": {
+            "speed": {
+              "type": "number",
+              "minimum": 0.3,
+              "maximum": 5,
+              "description": "Sweeps of the bar per second."
+            },
+            "zone": {
+              "type": "number",
+              "minimum": 0.04,
+              "maximum": 0.5,
+              "description": "Width of the green, as a share of the bar."
+            },
+            "speedup": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 2,
+              "description": "The marker speeds up by this after a miss."
+            },
+            "hits": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 8,
+              "description": "Hits needed (a leak, or any job but an axle)."
+            },
+            "axleHits": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 8,
+              "description": "Hits needed for an axle."
+            }
+          }
+        },
+        "dial": {
+          "type": "object",
+          "description": "Hold a drifting needle in the green with left and right.",
+          "required": ["drift", "push", "damping", "zone", "fill", "drain"],
+          "additionalProperties": false,
+          "properties": {
+            "drift": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 5,
+              "description": "How hard the needle drifts on its own."
+            },
+            "push": {
+              "type": "number",
+              "minimum": 0.5,
+              "maximum": 10,
+              "description": "How hard left and right push it."
+            },
+            "damping": {
+              "type": "number",
+              "minimum": 0.1,
+              "maximum": 10,
+              "description": "How quickly it settles."
+            },
+            "zone": {
+              "type": "number",
+              "minimum": 0.05,
+              "maximum": 1,
+              "description": "Width of the green (the dial runs from -1 to 1)."
+            },
+            "fill": {
+              "type": "number",
+              "minimum": 0.05,
+              "maximum": 2,
+              "description": "Progress per second in the green (1 = done)."
+            },
+            "drain": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 2,
+              "description": "Progress lost per second outside it."
+            }
+          }
+        },
+        "spray": {
+          "type": "object",
+          "description": "The fire extinguisher: aim at the base of each flame and spray in bursts.",
+          "required": ["use", "refill", "base", "flame", "regrow", "reach"],
+          "additionalProperties": false,
+          "properties": {
+            "use": {
+              "type": "number",
+              "minimum": 0.05,
+              "maximum": 2,
+              "description": "Pressure used per second of spraying (a full bottle has 1)."
+            },
+            "refill": {
+              "type": "number",
+              "minimum": 0.01,
+              "maximum": 2,
+              "description": "Pressure regained per second when let go."
+            },
+            "base": {
+              "type": "number",
+              "minimum": 0.2,
+              "maximum": 10,
+              "description": "How fast spraying the base of a flame puts it out (a flame has 1)."
+            },
+            "flame": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 5,
+              "description": "How fast spraying the flame itself does."
+            },
+            "regrow": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 2,
+              "description": "How fast an unsprayed flame grows back."
+            },
+            "reach": {
+              "type": "number",
+              "minimum": 0.03,
+              "maximum": 0.4,
+              "description": "How close to the base the nozzle must be, as a share of the panel."
+            }
+          }
+        },
+        "pour": {
+          "type": "object",
+          "description": "Hold to pour from the can, let go when the tank is full; overfill and it spills.",
+          "required": ["rate", "full", "spill", "fireChance"],
+          "additionalProperties": false,
+          "properties": {
+            "rate": {
+              "type": "number",
+              "minimum": 5,
+              "maximum": 38,
+              "description": "Tank % poured per second. At most 38: the host accepts pours at that rate."
+            },
+            "full": {
+              "type": "number",
+              "minimum": 50,
+              "maximum": 99,
+              "description": "Let go at or above this % and the job is done."
+            },
+            "spill": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 50,
+              "description": "Fuel lost from the can on a spill."
+            },
+            "fireChance": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "Chance a spill starts a fire."
+            }
+          }
+        },
+        "dents": {
+          "type": "object",
+          "description": "Alternate left and right as fast as you can.",
+          "required": ["taps"],
+          "additionalProperties": false,
+          "properties": {
+            "taps": {
+              "type": "integer",
+              "minimum": 2,
+              "maximum": 40,
+              "description": "Alternating taps needed."
+            }
+          }
+        },
+        "radar": {
+          "type": "object",
+          "description": "Tap as the sweep crosses the blip.",
+          "required": ["sweep", "window", "repair", "rebuild"],
+          "additionalProperties": false,
+          "properties": {
+            "sweep": {
+              "type": "number",
+              "minimum": 0.5,
+              "maximum": 10,
+              "description": "How fast the sweep turns, in radians a second."
+            },
+            "window": {
+              "type": "number",
+              "minimum": 0.05,
+              "maximum": 1,
+              "description": "How close to the blip counts, in radians either way."
+            },
+            "repair": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 8,
+              "description": "Hits to repair a damaged radar."
+            },
+            "rebuild": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10,
+              "description": "Hits to rebuild one that was knocked off."
+            }
+          }
+        },
+        "glass": {
+          "type": "object",
+          "description": "Knock the broken glass out, then tap when the new pane lines up.",
+          "required": ["knocks", "slide", "window", "hits"],
+          "additionalProperties": false,
+          "properties": {
+            "knocks": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 12,
+              "description": "Taps to knock the old glass out."
+            },
+            "slide": {
+              "type": "number",
+              "minimum": 0.3,
+              "maximum": 5,
+              "description": "How fast the new pane slides past, in panel widths a second."
+            },
+            "window": {
+              "type": "number",
+              "minimum": 0.03,
+              "maximum": 0.5,
+              "description": "How close to lined up counts."
+            },
+            "hits": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 6,
+              "description": "Times it must line up."
+            }
+          }
+        },
+        "unjam": {
+          "type": "object",
+          "description": "A gunner clears their own jammed gun: press the directions shown, in order.",
+          "required": ["steps", "pause"],
+          "additionalProperties": false,
+          "properties": {
+            "steps": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10,
+              "description": "Directions to press."
+            },
+            "pause": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 2,
+              "description": "Seconds lost on a wrong one."
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "stock": {
+      "type": "object",
+      "required": ["fuel", "tyres", "bumpers", "glass"],
+      "additionalProperties": false,
+      "properties": {
+        "fuel": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 20,
+          "description": "Fuel cans."
+        },
+        "tyres": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 20,
+          "description": "Spare tyres."
+        },
+        "bumpers": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 40,
+          "description": "Bumper pieces."
+        },
+        "glass": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 20,
+          "description": "Windscreens."
+        }
+      }
+    },
+    "job": {
+      "type": "object",
+      "required": ["game", "bot"],
+      "additionalProperties": false,
+      "properties": {
+        "game": {
+          "enum": ["glue", "nuts", "hammer", "dial", "spray", "pour", "dents", "radar", "glass"],
+          "description": "The mini-game this job is played with. 'pour' only works for fuel."
+        },
+        "bot": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 20,
+          "description": "Seconds a bot of normal speed takes (bot levels scale it)."
+        },
+        "below": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "The job shows up below this level (see the job)."
+        },
+        "above": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "The job shows up above this level (see the job)."
+        },
+        "fix": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 100,
+          "description": "How much one job repairs (see the job)."
+        },
+        "gap": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 50,
+          "description": "How far below its best the chassis must be (see the job)."
+        }
+      }
+    }
+  }
+}

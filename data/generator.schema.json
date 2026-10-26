@@ -1,0 +1,241 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "generator.schema.json",
+  "title": "derby01: the town generator",
+  "description": "The recipe the town generator follows to lay out a town from a map number (1 to 99999) for a number of cars (2 to 8): the same number and cars always give the same town, as a layout like data/town.json. Three blocks each way round an open square: a ring road you can lap, two-lane streets, the office with its deck and canopy on the square, bays, islands, the kiosk and a shed; office blocks, some with an alley through or an L round a yard; a park with the pavilion and a small car park; lamp posts and rowans along the streets. The town grows with the cars. Used when rounds.json says map: generated (the default). Ranges are [smallest, largest]: the generator picks between them.",
+  "type": "object",
+  "required": [
+    "perCar",
+    "minScale",
+    "blocks",
+    "square",
+    "corners",
+    "streets",
+    "office",
+    "buildings",
+    "park",
+    "lamps",
+    "trees",
+    "pieces"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "perCar": {
+      "type": "number",
+      "minimum": 600,
+      "maximum": 3000,
+      "description": "Square metres of town for each car: the blocks and the square grow (the streets stay as wide) until the town has this much per car."
+    },
+    "minScale": {
+      "type": "number",
+      "minimum": 0.5,
+      "maximum": 1.5,
+      "description": "The town never shrinks below this share of its natural size, however few the cars: smaller blocks couldn't hold a building, nor the square a car park."
+    },
+    "blocks": {
+      "type": "object",
+      "description": "The blocks round the square, before scaling.",
+      "required": ["w", "d"],
+      "additionalProperties": false,
+      "properties": {
+        "w": { "$ref": "#/$defs/metres", "description": "Width of the blocks west and east of the square." },
+        "d": { "$ref": "#/$defs/metres", "description": "Depth of the blocks north and south of it." }
+      }
+    },
+    "square": {
+      "type": "object",
+      "description": "The open square in the middle, the office car park: room to brawl and drift.",
+      "required": ["w", "d", "bays", "stalls", "islands"],
+      "additionalProperties": false,
+      "properties": {
+        "w": { "$ref": "#/$defs/metres", "description": "Its width, before scaling." },
+        "d": { "$ref": "#/$defs/metres", "description": "Its depth, before scaling." },
+        "bays": { "$ref": "#/$defs/count", "description": "Rows of parking bays on it." },
+        "stalls": { "$ref": "#/$defs/count", "description": "Stalls along each side of a row." },
+        "islands": { "$ref": "#/$defs/count", "description": "Kerbed grass strips with rowans." }
+      }
+    },
+    "corners": {
+      "type": "object",
+      "description": "Corners of the town cut off on the slant: sweeping bends on the ring.",
+      "required": ["cuts", "length"],
+      "additionalProperties": false,
+      "properties": {
+        "cuts": {
+          "$ref": "#/$defs/count",
+          "description": "How many of the four corners are cut (the same one may come up twice)."
+        },
+        "length": { "$ref": "#/$defs/metres", "description": "How much each cut takes off, before scaling." }
+      }
+    },
+    "streets": {
+      "type": "object",
+      "description": "The streets between the blocks.",
+      "required": ["spokes", "exits"],
+      "additionalProperties": false,
+      "properties": {
+        "spokes": {
+          "type": "object",
+          "description": "Streets from the square's corners to the ring left out: two blocks become one, and a street ends in a T.",
+          "required": ["none", "one"],
+          "additionalProperties": false,
+          "properties": {
+            "none": { "$ref": "#/$defs/chance", "description": "Chance that none is left out." },
+            "one": {
+              "$ref": "#/$defs/chance",
+              "description": "Otherwise, the chance that just one is (else two)."
+            }
+          }
+        },
+        "exits": {
+          "type": "object",
+          "description": "Streets that run on out of town, closed by a barrier.",
+          "required": ["one"],
+          "additionalProperties": false,
+          "properties": { "one": { "$ref": "#/$defs/chance", "description": "Chance of one (else two)." } }
+        }
+      }
+    },
+    "office": {
+      "type": "object",
+      "description": "The office on the square, with the concrete deck and the yellow canopy in front.",
+      "required": ["depth", "length", "stairs", "deck"],
+      "additionalProperties": false,
+      "properties": {
+        "depth": { "$ref": "#/$defs/metres", "description": "How deep the building is." },
+        "length": { "$ref": "#/$defs/metres", "description": "How long its front is." },
+        "stairs": {
+          "$ref": "#/$defs/chance",
+          "description": "Chance a brick one gets a yellow stairwell on an end."
+        },
+        "deck": {
+          "type": "number",
+          "minimum": 8,
+          "maximum": 40,
+          "description": "The deck's longest, in metres (it is half the front at most)."
+        }
+      }
+    },
+    "buildings": {
+      "type": "object",
+      "description": "The office blocks.",
+      "required": ["brick", "white", "switch", "alley", "yard"],
+      "additionalProperties": false,
+      "properties": {
+        "brick": {
+          "$ref": "#/$defs/heights",
+          "description": "Heights a brick building may be (one is picked)."
+        },
+        "white": { "$ref": "#/$defs/heights", "description": "Heights a white building may be." },
+        "switch": {
+          "$ref": "#/$defs/chance",
+          "description": "Chance the next building in a row changes look."
+        },
+        "alley": {
+          "$ref": "#/$defs/chance",
+          "description": "Chance a long block gets an alley through it (the first always does)."
+        },
+        "yard": { "$ref": "#/$defs/chance", "description": "Chance a big block is an L round a yard." }
+      }
+    },
+    "park": {
+      "type": "object",
+      "description": "The park's trees.",
+      "required": ["every", "poplars"],
+      "additionalProperties": false,
+      "properties": {
+        "every": { "$ref": "#/$defs/metres", "description": "Metres between them." },
+        "poplars": { "$ref": "#/$defs/chance", "description": "Chance one is a poplar." }
+      }
+    },
+    "lamps": {
+      "type": "object",
+      "description": "Lamp posts along the pavements, on alternate sides.",
+      "required": ["every"],
+      "additionalProperties": false,
+      "properties": { "every": { "$ref": "#/$defs/metres", "description": "Metres between them." } }
+    },
+    "trees": {
+      "type": "object",
+      "description": "Rowans along the streets, and the odd poplar.",
+      "required": ["every", "ring", "streets", "poplars"],
+      "additionalProperties": false,
+      "properties": {
+        "every": { "$ref": "#/$defs/metres", "description": "Metres between them." },
+        "ring": { "$ref": "#/$defs/chance", "description": "Chance a stretch of the ring has trees." },
+        "streets": { "$ref": "#/$defs/chance", "description": "Chance another street has them." },
+        "poplars": { "$ref": "#/$defs/chance", "description": "Chance a street tree is a poplar." }
+      }
+    },
+    "pieces": {
+      "type": "object",
+      "description": "Which piece of data/pieces.json the generator puts down for each thing. Pick one of a like size.",
+      "required": [
+        "brick",
+        "white",
+        "stairs",
+        "deck",
+        "canopy",
+        "kiosk",
+        "shed",
+        "woodShed",
+        "pavilion",
+        "tree",
+        "poplar",
+        "lamp",
+        "bollard",
+        "boulder"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "brick": { "$ref": "#/$defs/piece", "description": "Brick buildings (sized)." },
+        "white": { "$ref": "#/$defs/piece", "description": "White buildings (sized)." },
+        "stairs": { "$ref": "#/$defs/piece", "description": "Stairwells (sized)." },
+        "deck": { "$ref": "#/$defs/piece", "description": "The deck (sized)." },
+        "canopy": { "$ref": "#/$defs/piece", "description": "The canopy." },
+        "kiosk": { "$ref": "#/$defs/piece", "description": "The kiosk." },
+        "shed": { "$ref": "#/$defs/piece", "description": "The little shed." },
+        "woodShed": { "$ref": "#/$defs/piece", "description": "The car park's shed (sized)." },
+        "pavilion": { "$ref": "#/$defs/piece", "description": "The park's pavilion." },
+        "tree": { "$ref": "#/$defs/piece", "description": "Trees." },
+        "poplar": { "$ref": "#/$defs/piece", "description": "Tall trees." },
+        "lamp": { "$ref": "#/$defs/piece", "description": "Lamp posts." },
+        "bollard": { "$ref": "#/$defs/piece", "description": "Bollards." },
+        "boulder": { "$ref": "#/$defs/piece", "description": "Boulders by the exits (given a radius)." }
+      }
+    }
+  },
+  "$defs": {
+    "metres": {
+      "type": "array",
+      "description": "[smallest, largest] in metres.",
+      "prefixItems": [
+        { "type": "number", "minimum": 1, "maximum": 200, "description": "The smallest." },
+        { "type": "number", "minimum": 1, "maximum": 200, "description": "The largest." }
+      ],
+      "items": false,
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "count": {
+      "type": "array",
+      "description": "[fewest, most].",
+      "prefixItems": [
+        { "type": "integer", "minimum": 0, "maximum": 12, "description": "The fewest." },
+        { "type": "integer", "minimum": 0, "maximum": 12, "description": "The most." }
+      ],
+      "items": false,
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "heights": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 8,
+      "description": "Heights in metres, one picked at random (list one twice to make it likelier). A floor is 3.4 m.",
+      "items": { "type": "number", "minimum": 3, "maximum": 24, "description": "A height." }
+    },
+    "chance": { "type": "number", "minimum": 0, "maximum": 1, "description": "A chance, 0 to 1." },
+    "piece": { "type": "string", "x-zirbel-ref": "pieces", "description": "A piece's id." }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "teams": [
+    { "id": "red", "name": "Red", "paint": "#d13030", "ui": "#ff5a4f" },
+    { "id": "blue", "name": "Blue", "paint": "#2a55c0", "ui": "#4f86ff" },
+    { "id": "green", "name": "Green", "paint": "#2f9e44", "ui": "#4fd06b" },
+    { "id": "yellow", "name": "Yellow", "paint": "#e8b420", "ui": "#ffd24a" },
+    { "id": "orange", "name": "Orange", "paint": "#e86a1a", "ui": "#ff8f3d" },
+    { "id": "purple", "name": "Purple", "paint": "#8a3fd0", "ui": "#b77bff" },
+    { "id": "cyan", "name": "Cyan", "paint": "#1fb5c9", "ui": "#43dcef" },
+    { "id": "pink", "name": "Pink", "paint": "#e0559a", "ui": "#ff7cbc" }
+  ]
+}

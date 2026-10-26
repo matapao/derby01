@@ -1,0 +1,35 @@
+{
+  "perCar": 1230,
+  "minScale": 0.8,
+  "blocks": { "w": [11, 14], "d": [9.5, 12] },
+  "square": { "w": [32, 38], "d": [24, 28], "bays": [1, 2], "stalls": [5, 9], "islands": [1, 2] },
+  "corners": { "cuts": [1, 3], "length": [8, 13] },
+  "streets": { "spokes": { "none": 0.25, "one": 0.6 }, "exits": { "one": 0.5 } },
+  "office": { "depth": [10, 13], "length": [30, 44], "stairs": 0.7, "deck": 26 },
+  "buildings": {
+    "brick": [10.2, 13.6, 13.6, 17],
+    "white": [6.8, 10.2, 10.2],
+    "switch": 0.4,
+    "alley": 0.45,
+    "yard": 0.5
+  },
+  "park": { "every": [7, 9], "poplars": 0.2 },
+  "lamps": { "every": [19, 25] },
+  "trees": { "every": [10, 14], "ring": 0.55, "streets": 0.7, "poplars": 0.15 },
+  "pieces": {
+    "brick": "building-brick",
+    "white": "building-white",
+    "stairs": "stairwell",
+    "deck": "deck",
+    "canopy": "canopy",
+    "kiosk": "kiosk",
+    "shed": "shed-red",
+    "woodShed": "shed-wood",
+    "pavilion": "pavilion",
+    "tree": "rowan",
+    "poplar": "poplar",
+    "lamp": "lamp",
+    "bollard": "bollard",
+    "boulder": "boulder"
+  }
+}

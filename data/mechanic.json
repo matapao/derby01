@@ -1,0 +1,171 @@
+{
+  "spares": {
+    "start": {
+      "fuel": 1,
+      "tyres": 1,
+      "bumpers": 3,
+      "glass": 1
+    },
+    "max": {
+      "fuel": 3,
+      "tyres": 4,
+      "bumpers": 8,
+      "glass": 2
+    },
+    "canFuel": 55
+  },
+  "systems": {
+    "fuel": {
+      "idle": 0.16,
+      "throttle": 0.5,
+      "boost": 2,
+      "leak": 1.6
+    },
+    "fire": {
+      "grow": 7,
+      "growLeaking": 4,
+      "engine": 0.8,
+      "chassis": 1.4,
+      "fromEngineBelow": 25,
+      "fromEngine": 0.08
+    },
+    "tyres": {
+      "slideRear": 1.1,
+      "slideFront": 0.4,
+      "rim": 0.3
+    },
+    "broken": {
+      "lowPower": 0.35,
+      "flatSpeed": 0.09,
+      "flatGrip": 0.12,
+      "rearAxle": 0.55,
+      "frontAxle": 0.45,
+      "pull": 0.07,
+      "wobble": 0.12
+    }
+  },
+  "jobs": {
+    "fire": {
+      "game": "spray",
+      "bot": 2.6
+    },
+    "engine": {
+      "game": "dial",
+      "bot": 3.6,
+      "below": 75,
+      "fix": 45
+    },
+    "fuel": {
+      "game": "pour",
+      "bot": 2.6,
+      "below": 65
+    },
+    "leak": {
+      "game": "hammer",
+      "bot": 2.6
+    },
+    "axle": {
+      "game": "hammer",
+      "bot": 3.6
+    },
+    "tyre": {
+      "game": "nuts",
+      "bot": 3.2,
+      "below": 45
+    },
+    "bumper": {
+      "game": "glue",
+      "bot": 3.4
+    },
+    "glass": {
+      "game": "glass",
+      "bot": 4,
+      "above": 0.2
+    },
+    "radar": {
+      "game": "radar",
+      "bot": 3.5,
+      "below": 0.7
+    },
+    "chassis": {
+      "game": "dents",
+      "bot": 3.2,
+      "fix": 8,
+      "gap": 3
+    },
+    "panel": {
+      "game": "nuts",
+      "bot": 1.8,
+      "urgency": 54
+    }
+  },
+  "games": {
+    "glue": {
+      "start": 0.15,
+      "heat": 1,
+      "cool": 0.75,
+      "low": 0.5,
+      "high": 0.88,
+      "held": 0.42,
+      "idle": 0.3,
+      "burn": 0.18
+    },
+    "nuts": {
+      "nuts": 5,
+      "taps": 4,
+      "pause": 0.35,
+      "panelNuts": 2,
+      "panelTaps": 2,
+      "panelPause": 0.18,
+      "panelTime": 1.5
+    },
+    "hammer": {
+      "speed": 1.5,
+      "zone": 0.14,
+      "speedup": 1.12,
+      "hits": 2,
+      "axleHits": 3
+    },
+    "dial": {
+      "drift": 1.7,
+      "push": 3.4,
+      "damping": 2.4,
+      "zone": 0.34,
+      "fill": 0.45,
+      "drain": 0.12
+    },
+    "spray": {
+      "use": 0.26,
+      "refill": 0.14,
+      "base": 1.9,
+      "flame": 0.35,
+      "regrow": 0.12,
+      "reach": 0.13
+    },
+    "pour": {
+      "rate": 38,
+      "full": 88,
+      "spill": 10,
+      "fireChance": 0.15
+    },
+    "dents": {
+      "taps": 14
+    },
+    "radar": {
+      "sweep": 3.4,
+      "window": 0.3,
+      "repair": 2,
+      "rebuild": 4
+    },
+    "glass": {
+      "knocks": 5,
+      "slide": 1.25,
+      "window": 0.15,
+      "hits": 2
+    },
+    "unjam": {
+      "steps": 4,
+      "pause": 0.4
+    }
+  }
+}

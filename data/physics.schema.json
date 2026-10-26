@@ -1,0 +1,261 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "physics.schema.json",
+  "title": "derby01: car physics",
+  "description": "How the stock car drives and bounces (arcade: a rigid body on the ground plane with simple vertical motion). Every kit scales these with its handling factors; broken parts scale them again. Speeds in m/s (29 m/s is about 104 km/h), accelerations in m/s².",
+  "type": "object",
+  "required": ["gravity", "engine", "nitro", "drag", "grip", "steering", "collisions"],
+  "additionalProperties": false,
+  "properties": {
+    "gravity": {
+      "type": "number",
+      "minimum": 9,
+      "maximum": 40,
+      "description": "How fast cars fall after a jump or a knock (stronger than real gravity, so they come down snappily)."
+    },
+    "engine": {
+      "type": "object",
+      "description": "Throttle and brakes.",
+      "required": ["top", "accel", "brake", "brakeReversing", "reverse", "reverseTop"],
+      "additionalProperties": false,
+      "properties": {
+        "top": {
+          "type": "number",
+          "minimum": 18,
+          "maximum": 40,
+          "description": "Top speed without nitro (29 m/s is about 104 km/h)."
+        },
+        "accel": {
+          "type": "number",
+          "minimum": 5,
+          "maximum": 30,
+          "description": "Pull from a standstill at full throttle."
+        },
+        "brake": { "type": "number", "minimum": 5, "maximum": 50, "description": "Braking going forwards." },
+        "brakeReversing": {
+          "type": "number",
+          "minimum": 5,
+          "maximum": 50,
+          "description": "Braking with the throttle while rolling backwards."
+        },
+        "reverse": { "type": "number", "minimum": 2, "maximum": 20, "description": "Pull in reverse." },
+        "reverseTop": {
+          "type": "number",
+          "minimum": 4,
+          "maximum": 25,
+          "description": "Top speed in reverse."
+        }
+      }
+    },
+    "nitro": {
+      "type": "object",
+      "description": "The boost: a hard kick and a higher top speed. The bottle refills when you let go.",
+      "required": ["top", "topPerKick", "accel", "burn", "refill"],
+      "additionalProperties": false,
+      "properties": {
+        "top": {
+          "type": "number",
+          "minimum": 20,
+          "maximum": 50,
+          "description": "Top speed on nitro, for a stock bottle (40 m/s is about 144 km/h)."
+        },
+        "topPerKick": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10,
+          "description": "Extra top speed per unit of a kit's nitro factor above 1."
+        },
+        "accel": {
+          "type": "number",
+          "minimum": 5,
+          "maximum": 50,
+          "description": "Pull on nitro (times the kit's nitro factor)."
+        },
+        "burn": {
+          "type": "number",
+          "minimum": 0.05,
+          "maximum": 2,
+          "description": "Share of a full bottle used per second (divided by the kit's nitro factor)."
+        },
+        "refill": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Share of the bottle regained per second off the button."
+        }
+      }
+    },
+    "drag": {
+      "type": "object",
+      "description": "What slows the car, in m/s².",
+      "required": ["rolling", "air", "handbrake", "coast", "wreck", "grass"],
+      "additionalProperties": false,
+      "properties": {
+        "rolling": { "type": "number", "minimum": 0, "maximum": 5, "description": "Always." },
+        "air": { "type": "number", "minimum": 0, "maximum": 0.05, "description": "Times speed squared." },
+        "handbrake": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 30,
+          "description": "With the handbrake on."
+        },
+        "coast": { "type": "number", "minimum": 0, "maximum": 10, "description": "Off the throttle." },
+        "wreck": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 30,
+          "description": "A wreck rolling to a stop."
+        },
+        "grass": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 30,
+          "description": "On grass, times how much grip the kit loses there."
+        }
+      }
+    },
+    "grip": {
+      "type": "object",
+      "description": "Sideways grip: how fast the tyres kill a slide, in m/s².",
+      "required": ["tyres", "handbrake", "wreck", "stunned", "sliding", "slideAbove"],
+      "additionalProperties": false,
+      "properties": {
+        "tyres": { "type": "number", "minimum": 5, "maximum": 50, "description": "Normal driving." },
+        "handbrake": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 30,
+          "description": "With the handbrake on: the tail lets go."
+        },
+        "wreck": { "type": "number", "minimum": 1, "maximum": 50, "description": "A wreck sliding." },
+        "stunned": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Share of grip lost right after a big knock (the tyres skate)."
+        },
+        "sliding": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Share of grip lost in a power slide (times the kit's slide)."
+        },
+        "slideAbove": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 30,
+          "description": "Full throttle at full lock lets the tail go above this speed."
+        }
+      }
+    },
+    "steering": {
+      "type": "object",
+      "description": "Turning.",
+      "required": [
+        "lockSlow",
+        "lockFast",
+        "fastAt",
+        "response",
+        "yaw",
+        "yawHandbrake",
+        "spin",
+        "spinHandbrake",
+        "handbrakeTurn"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "lockSlow": {
+          "type": "number",
+          "minimum": 0.2,
+          "maximum": 1,
+          "description": "Steering lock at walking pace, in radians."
+        },
+        "lockFast": {
+          "type": "number",
+          "minimum": 0.05,
+          "maximum": 0.6,
+          "description": "Steering lock at speed."
+        },
+        "fastAt": {
+          "type": "number",
+          "minimum": 10,
+          "maximum": 60,
+          "description": "The speed at which the lock is lockFast."
+        },
+        "response": {
+          "type": "number",
+          "minimum": 2,
+          "maximum": 30,
+          "description": "How quickly the wheels follow the stick."
+        },
+        "yaw": {
+          "type": "number",
+          "minimum": 2,
+          "maximum": 30,
+          "description": "How quickly the car's turning follows the wheels."
+        },
+        "yawHandbrake": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 30,
+          "description": "The same on the handbrake."
+        },
+        "spin": {
+          "type": "number",
+          "minimum": 5,
+          "maximum": 60,
+          "description": "Caps the turn rate: spin / speed radians a second."
+        },
+        "spinHandbrake": {
+          "type": "number",
+          "minimum": 5,
+          "maximum": 80,
+          "description": "The cap on the handbrake."
+        },
+        "handbrakeTurn": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 3,
+          "description": "The handbrake turns the car this much harder."
+        }
+      }
+    },
+    "collisions": {
+      "type": "object",
+      "description": "Bounces. Buildings, posts and other pieces have their own in pieces.json.",
+      "required": ["cars", "edge"],
+      "additionalProperties": false,
+      "properties": {
+        "cars": { "$ref": "#/$defs/bounce", "description": "Car on car." },
+        "edge": { "$ref": "#/$defs/bounce", "description": "A car on the edge of the town." }
+      }
+    }
+  },
+  "$defs": {
+    "bounce": {
+      "type": "object",
+      "required": ["bounce", "rubber", "friction"],
+      "additionalProperties": false,
+      "properties": {
+        "bounce": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 0.9,
+          "description": "Restitution on bare metal: 0 stops dead, 1 bounces back at full speed."
+        },
+        "rubber": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 0.6,
+          "description": "Added where a rubber bumper is hit (dodgems)."
+        },
+        "friction": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "How much the touching surfaces drag on each other."
+        }
+      }
+    }
+  }
+}

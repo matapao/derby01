@@ -1,0 +1,22 @@
+{
+  "hp": 100,
+  "mass": 1200,
+  "seats": {
+    "driver": { "label": "Driver", "role": "DRIVER" },
+    "hood": { "label": "Rear left · hood gun", "role": "HOOD GUNNER" },
+    "trunk": { "label": "Rear right · trunk gun", "role": "TRUNK GUNNER" },
+    "mechanic": { "label": "Mechanic · front seat", "role": "MECHANIC" }
+  },
+  "turrets": {
+    "hood": { "facing": 0, "arc": 1.95, "pitchMin": -0.2, "pitchMax": 0.55 },
+    "trunk": { "facing": 3.1416, "arc": 1.95, "pitchMin": -0.2, "pitchMax": 0.55 }
+  },
+  "radar": { "period": 1.6, "range": 70, "hp": 26 },
+  "bumpers": {
+    "front": { "label": "front bumper", "hp": 34 },
+    "rear": { "label": "rear bumper", "hp": 30 },
+    "left": { "label": "left door bumper", "hp": 24 },
+    "right": { "label": "right door bumper", "hp": 24 }
+  },
+  "lights": { "flicker": 18, "out": 32 }
+}

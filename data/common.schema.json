@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "common.schema.json",
+  "title": "derby01: shared shapes",
+  "description": "Points, lines, polygons, headings, colours and car-local positions that the other schemas use. The map is in metres: x runs east, z runs south, the middle of the town is near (0, 0) and everything stays within 400 m of it.",
+  "$defs": {
+    "x": {
+      "type": "number",
+      "minimum": -400,
+      "maximum": 400,
+      "description": "Metres east (+) or west (-) of the middle of the map."
+    },
+    "z": {
+      "type": "number",
+      "minimum": -400,
+      "maximum": 400,
+      "description": "Metres south (+) or north (-) of the middle of the map."
+    },
+    "point": {
+      "type": "array",
+      "description": "A point on the map: [x, z] in metres, x east, z south.",
+      "prefixItems": [{ "$ref": "#/$defs/x" }, { "$ref": "#/$defs/z" }],
+      "items": false,
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "line": {
+      "type": "array",
+      "description": "A line through points on the map, in order.",
+      "items": { "$ref": "#/$defs/point" },
+      "minItems": 2,
+      "maxItems": 64
+    },
+    "poly": {
+      "type": "array",
+      "description": "A polygon: its corners in order, either way round.",
+      "items": { "$ref": "#/$defs/point" },
+      "minItems": 3,
+      "maxItems": 256
+    },
+    "yaw": {
+      "type": "number",
+      "minimum": -6.2832,
+      "maximum": 6.2832,
+      "description": "A heading in radians: 0 faces +z (south), 1.5708 faces +x (east), 3.1416 faces north."
+    },
+    "colour": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$", "description": "A colour as #rrggbb." },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]{0,31}$",
+      "description": "An id: lower-case letters, digits and dashes, starting with a letter."
+    },
+    "local": {
+      "type": "array",
+      "description": "A position on the car in metres: [x, y, z] with x to the car's left, y up from the ground and z forward from its middle.",
+      "prefixItems": [
+        {
+          "type": "number",
+          "minimum": -1.6,
+          "maximum": 1.6,
+          "description": "Metres to the car's left (+) or right (-)."
+        },
+        { "type": "number", "minimum": -0.5, "maximum": 2.6, "description": "Metres up from the ground." },
+        {
+          "type": "number",
+          "minimum": -3.2,
+          "maximum": 3.2,
+          "description": "Metres forward (+) or back (-) from the middle of the car."
+        }
+      ],
+      "items": false,
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "offset": {
+      "type": "array",
+      "description": "An offset from the part's own position, in metres: [left, up, forward].",
+      "prefixItems": [
+        {
+          "type": "number",
+          "minimum": -1.5,
+          "maximum": 1.5,
+          "description": "Metres to the left (+) or right (-)."
+        },
+        { "type": "number", "minimum": -1.5, "maximum": 1.5, "description": "Metres up (+) or down (-)." },
+        {
+          "type": "number",
+          "minimum": -1.5,
+          "maximum": 1.5,
+          "description": "Metres forward (+) or back (-)."
+        }
+      ],
+      "items": false,
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "seconds": {
+      "type": "array",
+      "description": "A span of time: [shortest, longest] in seconds. A value is picked at random between them each time.",
+      "prefixItems": [
+        { "type": "number", "minimum": 0, "maximum": 120, "description": "The shortest, in seconds." },
+        { "type": "number", "minimum": 0, "maximum": 120, "description": "The longest, in seconds." }
+      ],
+      "items": false,
+      "minItems": 2,
+      "maxItems": 2
+    }
+  }
+}

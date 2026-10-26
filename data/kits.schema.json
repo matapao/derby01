@@ -1,0 +1,210 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "kits.schema.json",
+  "title": "derby01: mod kits",
+  "description": "The cars: every car is the same model, built up with a mod kit. A kit sets how the car drives (small, fair differences: what it does better it pays for somewhere else) and which add-on parts it wears. Each part sits in a damage zone and flies off when that side has taken enough of a beating; all of them go when the car is wrecked.",
+  "type": "object",
+  "required": ["defaults", "kits"],
+  "additionalProperties": false,
+  "properties": {
+    "defaults": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 8,
+      "description": "The kit each car starts with on a new setup, car 1 first; with more cars than kits listed, the list starts again. Players change it on the setup screen.",
+      "items": { "type": "string", "x-zirbel-ref": "kits", "description": "A kit's id." }
+    },
+    "kits": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 12,
+      "description": "The kits, in the order the setup screen lists them. There must be one with the id 'stock': a car whose kit is unknown drives as stock.",
+      "contains": {
+        "type": "object",
+        "required": ["id"],
+        "properties": { "id": { "const": "stock", "description": "The stock kit." } }
+      },
+      "items": { "$ref": "#/$defs/kit" }
+    }
+  },
+  "$defs": {
+    "kit": {
+      "type": "object",
+      "required": ["id", "name", "blurb", "handling", "parts"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "common.schema.json#/$defs/id",
+          "description": "The kit's id. The screens send it in the setup and the round, so keep it once players have picked it."
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 12,
+          "description": "Shown on the setup screen, in capitals."
+        },
+        "blurb": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 90,
+          "description": "One sentence for the setup screen (the kit's tooltip): what this car is good at, and what it pays for it."
+        },
+        "handling": {
+          "$ref": "#/$defs/handling",
+          "description": "How this car drives, as factors on the stock car."
+        },
+        "exhausts": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4,
+          "description": "Where the nitro flame comes out, if not from the car's own two exhausts under the back bumper (the muscle car's side pipes, say).",
+          "items": {
+            "$ref": "common.schema.json#/$defs/local",
+            "description": "An exhaust's outlet on the car."
+          }
+        },
+        "parts": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 24,
+          "description": "The add-on parts. At most 24: the screens send which are still on as 24 bits.",
+          "items": { "$ref": "#/$defs/part" }
+        }
+      }
+    },
+    "handling": {
+      "type": "object",
+      "required": ["grip", "steer", "vmax", "accel", "slide", "grass", "tough", "mass", "nitro"],
+      "additionalProperties": false,
+      "properties": {
+        "grip": {
+          "type": "number",
+          "minimum": 0.7,
+          "maximum": 1.3,
+          "description": "Sideways grip of the tyres (1 = stock). Less grip slides wider in the corners."
+        },
+        "steer": {
+          "type": "number",
+          "minimum": 0.7,
+          "maximum": 1.3,
+          "description": "How sharply it turns in (1 = stock)."
+        },
+        "vmax": {
+          "type": "number",
+          "minimum": 0.85,
+          "maximum": 1.15,
+          "description": "Top speed (1 = stock, about 104 km/h without nitro)."
+        },
+        "accel": {
+          "type": "number",
+          "minimum": 0.8,
+          "maximum": 1.25,
+          "description": "Pull from low speed (1 = stock)."
+        },
+        "slide": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 0.8,
+          "description": "How easily the tail steps out under power, and how loose it is on the handbrake: 0 stays planted, 0.65 is the drift car."
+        },
+        "grass": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 1,
+          "description": "Grip and drag on grass, where tarmac is 1: 0.78 is stock, the rally car minds it least."
+        },
+        "tough": {
+          "type": "number",
+          "minimum": 0.7,
+          "maximum": 1.4,
+          "description": "How well it takes a hit: damage to the chassis is divided by this."
+        },
+        "mass": {
+          "type": "number",
+          "minimum": 0.8,
+          "maximum": 1.3,
+          "description": "Weight, as a factor on the car's mass: heavier wins the shoving and turns slower."
+        },
+        "nitro": {
+          "type": "number",
+          "minimum": 0.6,
+          "maximum": 1.5,
+          "description": "The nitro bottle: its kick, its top speed, how long it lasts and how hard the car tugs at the wheel on it."
+        }
+      }
+    },
+    "part": {
+      "type": "object",
+      "required": ["zone", "hp", "at", "shapes"],
+      "additionalProperties": false,
+      "properties": {
+        "zone": {
+          "enum": ["front", "rear", "lf", "rf", "lr", "rr", "left", "right", "top"],
+          "description": "Which hits wear it down: front, rear, lf/rf/lr/rr (left/right, front/rear quarter), left or right (either quarter on that side), or top (a share of every hit)."
+        },
+        "hp": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 60,
+          "description": "How much damage on its zone it takes before it flies off. Paintballs count a third."
+        },
+        "at": { "$ref": "common.schema.json#/$defs/local", "description": "Where the part sits on the car." },
+        "shapes": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 12,
+          "description": "What it is made of: shapes from the kit-parts package, each in a material.",
+          "items": {
+            "type": "object",
+            "required": ["shape", "material"],
+            "additionalProperties": false,
+            "properties": {
+              "shape": {
+                "enum": [
+                  "kit/bar",
+                  "kit/spot",
+                  "kit/lens",
+                  "kit/scoop",
+                  "kit/flap",
+                  "kit/skid",
+                  "kit/wing-post",
+                  "kit/wing",
+                  "kit/endplate",
+                  "kit/canard",
+                  "kit/flare",
+                  "kit/diffuser",
+                  "kit/splitter",
+                  "kit/skirt",
+                  "kit/lip",
+                  "kit/hook",
+                  "kit/fin",
+                  "kit/blower",
+                  "kit/blower-scoop",
+                  "kit/pipe",
+                  "kit/ducktail"
+                ],
+                "description": "A shape from the kit-parts package (assets/assets.json has each one's size)."
+              },
+              "material": {
+                "enum": [
+                  "material/black",
+                  "material/carbon",
+                  "material/chrome",
+                  "material/aluminium",
+                  "material/red",
+                  "material/lens",
+                  "team"
+                ],
+                "description": "A material from the kit-parts package, or 'team' for the car's team colour."
+              },
+              "at": {
+                "$ref": "common.schema.json#/$defs/offset",
+                "description": "Where the shape sits, from the part's position. Default [0, 0, 0]."
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

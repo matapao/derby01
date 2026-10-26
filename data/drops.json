@@ -1,0 +1,13 @@
+{
+  "max": 6,
+  "atStart": 3,
+  "every": [5, 9],
+  "reach": 2.5,
+  "keep": { "edge": 3, "obstacles": 2.2, "cars": 10, "drops": 14 },
+  "types": {
+    "fuel": { "colour": "#ff7a1a", "ui": "#ff8f3d", "letter": "F" },
+    "tyre": { "colour": "#2ec8f0", "ui": "#43dcef", "letter": "T" },
+    "bumper": { "colour": "#ff4fc4", "ui": "#ff6fcf", "letter": "B" },
+    "glass": { "colour": "#8fdcff", "ui": "#9fe3ff", "letter": "W" }
+  }
+}

@@ -1,0 +1,84 @@
+{
+  "zones": {
+    "front": 0.5,
+    "rear": 0.95,
+    "lf": 1.25,
+    "rf": 1.25,
+    "lr": 1.25,
+    "rr": 1.25
+  },
+  "crash": {
+    "threshold": 3.2,
+    "per": 2.9
+  },
+  "wall": {
+    "ignore": 1.2,
+    "threshold": 4.5,
+    "per": 1.7,
+    "props": 0.8
+  },
+  "landing": {
+    "knock": 4,
+    "hurtAbove": 11,
+    "hurt": 1.5,
+    "radarAbove": 9,
+    "radar": 2,
+    "tyresAbove": 6.5,
+    "tyres": 4.5,
+    "axleAbove": 9,
+    "axleChance": 0.12
+  },
+  "kick": {
+    "min": 1.5,
+    "roll": 0.32,
+    "pitch": 0.22,
+    "stun": 0.055,
+    "stunMax": 0.6,
+    "radarAbove": 10,
+    "radar": 2,
+    "liftAbove": 5,
+    "lift": 0.5,
+    "liftMax": 4.2
+  },
+  "bumpers": {
+    "crash": 0.6,
+    "wall": 0.6,
+    "gun": 0.45,
+    "wear": 1.2,
+    "lowHit": 0.8
+  },
+  "fatigue": 0.5,
+  "kitGun": 0.3,
+  "parts": {
+    "engine": 0.45,
+    "leakGun": 0.02,
+    "leakCrash": 0.3,
+    "leakCrashAbove": 7,
+    "tyreGun": 6,
+    "tyreCrash": 3.5,
+    "tyreCrashAbove": 4,
+    "axleAbove": 11,
+    "axleChance": 0.3,
+    "gunJamAbove": 9,
+    "gunJamChance": 0.3,
+    "fireLeakGun": 0.02
+  },
+  "credit": {
+    "hit": 2.5,
+    "wreck": 4
+  },
+  "bodywork": {
+    "panelDamage": 12,
+    "panelImpact": 5,
+    "panelHit": 1.2,
+    "wheelImpact": 8,
+    "wheelHit": 2,
+    "wheelRadius": 0.95,
+    "wheelHeight": 0.85,
+    "wheelTyreHp": 65,
+    "wreckPanels": 4,
+    "wreckWheels": 2,
+    "panelLooseDamage": 6,
+    "panelLooseTime": 0.8
+  }
+}

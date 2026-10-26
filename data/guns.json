@@ -1,0 +1,18 @@
+{
+  "rate": 9,
+  "dmg": 1.1,
+  "spread": 0.009,
+  "speed": 85,
+  "gravity": 9.81,
+  "life": 2.4,
+  "heat": 0.045,
+  "cool": 0.38,
+  "coolFiring": 0.15,
+  "recover": 0.35,
+  "hot": 0.75,
+  "hotSpray": 0.8,
+  "jamOnOverheat": 0.5,
+  "jamWhenHot": 0.012,
+  "zoomSpread": 0.5,
+  "radar": { "hit": 3.5, "splash": 1.5, "splashRadius": 0.6 }
+}

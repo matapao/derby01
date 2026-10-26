@@ -1,0 +1,14 @@
+{
+  "status": "Installed and used by SFX.gun",
+  "file": "paintball-shot-fabianofa.mp3",
+  "title": "paintball_shoot1.wav",
+  "creator": "fabianofa",
+  "source": "https://freesound.org/people/fabianofa/sounds/98189/",
+  "download": "https://cdn.freesound.org/previews/98/98189_1354367-hq.mp3",
+  "licence": "CC0 1.0 Universal",
+  "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "retrieved": "2026-10-24",
+  "sha256": "7f60036a6406ebc832cfd155579edb2c8194046baa6d175a7b755f60c8a7d4bc",
+  "modifications": "Freesound high-quality MP3 preview of the original WAV; no edits to the recording. In-game playback varies gain by distance and pitch slightly per shot.",
+  "description": "A single real paintball marker shot with a short reverb tail."
+}

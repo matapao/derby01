@@ -1,0 +1,218 @@
+{
+  "id": "derby01",
+  "version": "0.1.0",
+  "title": "DERBY01",
+  "back": [
+    "Two to eight cars, four seats each: a driver, two gunners firing paint from the turrets, and a mechanic.",
+    "Every seat plays by touch, keys, mouse or gamepad, and the computer takes the seats nobody sits in.",
+    "Each car drives its own way, stock, rally, drift, sport or muscle, with nitro for a burst of speed.",
+    "Score with damage, wrecks, held drifts and the radar shot off a roof, while the mechanic fixes what breaks.",
+    "Each map number lays out its own town, three blocks each way round an open square, sized to the number of cars."
+  ],
+  "players": {
+    "min": 1,
+    "max": 16
+  },
+  "entry": "index.html",
+  "runsOn": "Phones, tablets and computers",
+  "orientation": "landscape",
+  "madeBy": {
+    "name": "Matapao"
+  },
+  "license": "MIT",
+  "agents": {
+    "play": true,
+    "build": true,
+    "fork": true
+  },
+  "credits": [
+    {
+      "slot": "Networking and hashing",
+      "artist": "Zirbel contributors",
+      "work": "Zirbel networking SDK and portable SHA-256",
+      "url": "https://github.com/matapao/zirbel",
+      "license": "MIT"
+    },
+    {
+      "slot": "3D engine",
+      "artist": "three.js authors",
+      "work": "three.js r186",
+      "url": "https://threejs.org",
+      "license": "MIT"
+    },
+    {
+      "slot": "Car model",
+      "artist": "Bricchi Games",
+      "work": "Retro Car With Interior (PSX asset)",
+      "url": "https://bricchi-games.itch.io/retro-car-with-interior",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "slot": "Title font",
+      "artist": "The Bungee Project Authors",
+      "work": "Bungee",
+      "url": "https://github.com/djrrb/Bungee",
+      "license": "OFL-1.1"
+    },
+    {
+      "slot": "Text font",
+      "artist": "The Barlow Project Authors",
+      "work": "Barlow Condensed",
+      "url": "https://github.com/jpt/barlow",
+      "license": "OFL-1.1"
+    },
+    {
+      "slot": "Paintball marker",
+      "artist": "fabianofa",
+      "work": "paintball_shoot1.wav",
+      "url": "https://freesound.org/people/fabianofa/sounds/98189/",
+      "license": "CC0-1.0"
+    }
+  ],
+  "metrics": [
+    {
+      "name": "rounds_total",
+      "type": "counter",
+      "help": "Completed rounds",
+      "labels": {
+        "format": ["generated"],
+        "cars": ["2", "3", "4", "5", "6", "7", "8"],
+        "bots": ["0", "1", "2"]
+      }
+    },
+    {
+      "name": "round_points_earned",
+      "type": "histogram",
+      "help": "Total points earned in a completed round",
+      "unit": "points",
+      "labels": {
+        "format": ["generated"],
+        "cars": ["2", "3", "4", "5", "6", "7", "8"],
+        "bots": ["0", "1", "2"]
+      },
+      "buckets": [100, 500, 1000, 5000, 10000, 50000, 100000]
+    },
+    {
+      "name": "wrecks_total",
+      "type": "counter",
+      "help": "Cars wrecked in completed rounds",
+      "labels": {
+        "format": ["generated"],
+        "cars": ["2", "3", "4", "5", "6", "7", "8"],
+        "bots": ["0", "1", "2"]
+      }
+    },
+    {
+      "name": "round_seconds",
+      "type": "histogram",
+      "help": "Completed round duration",
+      "unit": "seconds",
+      "buckets": [15, 30, 60, 120, 300, 600, 1200, 3600],
+      "labels": {
+        "format": ["generated"],
+        "cars": ["2", "3", "4", "5", "6", "7", "8"],
+        "bots": ["0", "1", "2"]
+      }
+    },
+    {
+      "name": "round_points",
+      "type": "gauge",
+      "help": "Highest team points earned during a completed round",
+      "unit": "points",
+      "record": "high",
+      "labels": {
+        "format": ["generated"],
+        "cars": ["2", "3", "4", "5", "6", "7", "8"],
+        "bots": ["0", "1", "2"]
+      }
+    },
+    {
+      "name": "round_wrecks",
+      "type": "gauge",
+      "help": "Cars wrecked during a completed round",
+      "record": "high",
+      "labels": {
+        "format": ["generated"],
+        "cars": ["2", "3", "4", "5", "6", "7", "8"],
+        "bots": ["0", "1", "2"]
+      }
+    },
+    {
+      "name": "points",
+      "type": "gauge",
+      "help": "Highest team points earned in the current round",
+      "unit": "points",
+      "labels": {}
+    },
+    {
+      "name": "cars_remaining",
+      "type": "gauge",
+      "help": "Cars remaining in the current round",
+      "labels": {}
+    },
+    {
+      "name": "round_elapsed_seconds",
+      "type": "gauge",
+      "help": "Elapsed current round time",
+      "unit": "seconds",
+      "labels": {}
+    },
+    {
+      "name": "top_speed_kmh",
+      "type": "gauge",
+      "help": "Highest measured team speed (km/h) in a completed round",
+      "record": "high"
+    },
+    {
+      "name": "distance_m",
+      "type": "gauge",
+      "help": "Longest team distance driven in a completed round",
+      "unit": "meters",
+      "record": "high"
+    },
+    {
+      "name": "survival_s",
+      "type": "gauge",
+      "help": "Longest team survival in a completed round",
+      "unit": "seconds",
+      "record": "high"
+    },
+    {
+      "name": "burn_s",
+      "type": "gauge",
+      "help": "Longest measured drift or burn in a completed round",
+      "unit": "seconds",
+      "record": "high"
+    },
+    {
+      "name": "paint_accuracy",
+      "type": "gauge",
+      "help": "Highest team paint accuracy (percent) with at least ten shots",
+      "record": "high"
+    },
+    {
+      "name": "mechanic_jobs",
+      "type": "gauge",
+      "help": "Most applied mechanic jobs in a completed round",
+      "record": "high"
+    },
+    {
+      "name": "mechanic_repairs",
+      "type": "gauge",
+      "help": "Most body and engine health restored in a completed round",
+      "record": "high"
+    },
+    {
+      "name": "mechanic_fuel",
+      "type": "gauge",
+      "help": "Most actual fuel delivered in a completed round",
+      "record": "high"
+    },
+    {
+      "name": "mechanic_precision",
+      "type": "gauge",
+      "help": "Highest measured timing and direction accuracy (percent) with at least five local attempts",
+      "record": "high"
+    }
+  ]
+}

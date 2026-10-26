@@ -1,0 +1,263 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "pieces.schema.json",
+  "title": "derby01: pieces",
+  "description": "The catalogue of things a town is built from: each piece is an asset from the town package, a simplified collider, and behaviour components with their parameters (solid, breakable, ramp, drop pad). Place pieces in data/town.json or in a prefab. A piece's size ranges say which sizes a placement gives (w across, l along its yaw, h up, r a radius) and their limits.",
+  "type": "object",
+  "required": ["pieces"],
+  "additionalProperties": false,
+  "properties": {
+    "pieces": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 200,
+      "description": "The pieces. Ids must be unique; layouts and prefabs name them.",
+      "items": { "$ref": "#/$defs/piece" }
+    }
+  },
+  "$defs": {
+    "range": {
+      "type": "array",
+      "description": "[smallest, largest] in metres.",
+      "prefixItems": [
+        { "type": "number", "minimum": 0.05, "maximum": 120, "description": "The smallest." },
+        { "type": "number", "minimum": 0.05, "maximum": 120, "description": "The largest." }
+      ],
+      "items": false,
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "piece": {
+      "type": "object",
+      "required": ["id", "about", "asset", "collider", "components"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "common.schema.json#/$defs/id",
+          "description": "The piece's id, as layouts and prefabs name it."
+        },
+        "about": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 240,
+          "description": "What it is and what it does, for people and agents."
+        },
+        "asset": {
+          "enum": [
+            "town/building-brick",
+            "town/building-white",
+            "town/stairwell",
+            "town/deck",
+            "town/canopy",
+            "town/kiosk",
+            "town/shed-red",
+            "town/shed-wood",
+            "town/pavilion",
+            "town/rowan",
+            "town/poplar",
+            "town/lamp",
+            "town/bollard",
+            "town/boulder",
+            "town/ramp",
+            "town/drop-pad"
+          ],
+          "description": "What it looks like: an asset from the town package (assets/assets.json)."
+        },
+        "size": {
+          "type": "object",
+          "description": "The sizes a placement gives, and their limits. Without it the piece has one size.",
+          "additionalProperties": false,
+          "properties": {
+            "w": { "$ref": "#/$defs/range", "description": "Width across its yaw." },
+            "l": { "$ref": "#/$defs/range", "description": "Length along its yaw." },
+            "h": { "$ref": "#/$defs/range", "description": "Height." },
+            "r": { "$ref": "#/$defs/range", "description": "Radius." }
+          }
+        },
+        "collider": {
+          "$ref": "#/$defs/collider",
+          "description": "What cars and paintballs hit: simpler than the look."
+        },
+        "components": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 4,
+          "description": "Its behaviours, chosen from the ones the engine has.",
+          "items": { "$ref": "#/$defs/component" }
+        }
+      }
+    },
+    "collider": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["shape"],
+          "additionalProperties": false,
+          "description": "Nothing to hit (a ramp you drive up, a pad on the ground).",
+          "properties": { "shape": { "const": "none", "description": "No collider." } }
+        },
+        {
+          "type": "object",
+          "required": ["shape"],
+          "additionalProperties": false,
+          "description": "A box: the placement's size, or the fixed size given here.",
+          "properties": {
+            "shape": { "const": "box", "description": "A box on the ground." },
+            "w": {
+              "type": "number",
+              "minimum": 0.1,
+              "maximum": 120,
+              "description": "Fixed width, for pieces of one size."
+            },
+            "l": { "type": "number", "minimum": 0.1, "maximum": 120, "description": "Fixed length." },
+            "h": { "type": "number", "minimum": 0.1, "maximum": 40, "description": "Fixed height." }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["shape", "r", "h"],
+          "additionalProperties": false,
+          "description": "A post: a circle on the ground with a height.",
+          "properties": {
+            "shape": { "const": "circle", "description": "A circle on the ground." },
+            "r": {
+              "type": "number",
+              "minimum": 0.05,
+              "maximum": 20,
+              "description": "Radius in metres (or a factor on the placement's r when scaled)."
+            },
+            "h": {
+              "type": "number",
+              "minimum": 0.1,
+              "maximum": 40,
+              "description": "Height in metres (or a factor on r when scaled)."
+            },
+            "scaled": { "type": "boolean", "description": "Multiply r and h by the placement's r." }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["shape", "posts"],
+          "additionalProperties": false,
+          "description": "Several posts, placed in the piece's own frame.",
+          "properties": {
+            "shape": { "const": "posts", "description": "A few posts." },
+            "posts": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 8,
+              "description": "The posts: [left, forward, radius, height] in metres, from the piece's middle.",
+              "items": {
+                "type": "array",
+                "description": "One post.",
+                "prefixItems": [
+                  {
+                    "type": "number",
+                    "minimum": -20,
+                    "maximum": 20,
+                    "description": "Metres to the piece's left."
+                  },
+                  { "type": "number", "minimum": -20, "maximum": 20, "description": "Metres forward." },
+                  { "type": "number", "minimum": 0.05, "maximum": 3, "description": "Radius." },
+                  { "type": "number", "minimum": 0.1, "maximum": 40, "description": "Height." }
+                ],
+                "items": false,
+                "minItems": 4,
+                "maxItems": 4
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["shape"],
+          "additionalProperties": false,
+          "description": "A box with a half-round end towards its yaw, from the placement's size (the deck).",
+          "properties": { "shape": { "const": "rounded", "description": "A rounded box." } }
+        }
+      ]
+    },
+    "component": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["type", "bounce", "friction"],
+          "additionalProperties": false,
+          "description": "Solid: cars bounce off it and it doesn't move.",
+          "properties": {
+            "type": { "const": "solid", "description": "A solid thing." },
+            "bounce": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 0.9,
+              "description": "Restitution: 0 stops a car dead, higher bounces it back."
+            },
+            "friction": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "How much it drags along a car scraping past."
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["type", "speed", "slow", "dmg", "fall"],
+          "additionalProperties": false,
+          "description": "Breakable: hit it hard enough and it gives way (it stands up again next round); a slow nudge still stops you.",
+          "properties": {
+            "type": { "const": "breakable", "description": "It gives way." },
+            "speed": {
+              "type": "number",
+              "minimum": 0.5,
+              "maximum": 25,
+              "description": "How fast (m/s) a car must hit it."
+            },
+            "slow": {
+              "type": "number",
+              "minimum": 0.3,
+              "maximum": 1,
+              "description": "The share of its speed the car keeps."
+            },
+            "dmg": { "type": "number", "minimum": 0, "maximum": 20, "description": "Damage the car takes." },
+            "fall": {
+              "enum": ["tip", "shatter"],
+              "description": "tip: it falls over the way the car was going. shatter: it snaps into pieces that lie about (trees)."
+            },
+            "rest": {
+              "type": "number",
+              "minimum": 0.3,
+              "maximum": 1.6,
+              "description": "How far it tips, in radians (1.57 = flat on the ground)."
+            },
+            "dark": { "type": "boolean", "description": "Its light goes out when it is down." }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["type"],
+          "additionalProperties": false,
+          "description": "Ramp: the ground rises over the piece's footprint, from nothing at its back edge to its height at the front edge.",
+          "properties": { "type": { "const": "ramp", "description": "Drive up it." } }
+        },
+        {
+          "type": "object",
+          "required": ["type"],
+          "additionalProperties": false,
+          "description": "Drop pad: supply drops land here.",
+          "properties": {
+            "type": { "const": "dropPad", "description": "Drops land on it." },
+            "types": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 4,
+              "uniqueItems": true,
+              "description": "Which drops may land here. Default: any.",
+              "items": { "enum": ["fuel", "tyre", "bumper", "glass"], "description": "A kind of drop." }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

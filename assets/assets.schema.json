@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "assets.schema.json",
+  "title": "derby01: the asset catalogue",
+  "description": "Every asset the game uses: files (the car model and its textures, the fonts) and the things it builds in code (the town's buildings and street furniture, the kit parts and their materials, the drops). People add assets; agents use them by id. Third-party assets keep their own licences and credits.",
+  "type": "array",
+  "minItems": 1,
+  "maxItems": 500,
+  "items": {
+    "type": "object",
+    "required": ["id", "package", "kind", "file", "bytes", "use", "by", "license", "source"],
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9-]*/[a-z0-9][a-z0-9-]*$",
+        "description": "The asset's id: package/name."
+      },
+      "package": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9-]*$",
+        "description": "The package it belongs to."
+      },
+      "kind": {
+        "enum": ["model", "texture", "sound", "font", "image", "material"],
+        "description": "What it is."
+      },
+      "file": {
+        "type": ["string", "null"],
+        "description": "Its file, from the top of the game; null for what the game builds in code (see source)."
+      },
+      "bytes": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 33554432,
+        "description": "The file's size; 0 for what is built in code."
+      },
+      "use": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 400,
+        "description": "What the game uses it for."
+      },
+      "by": { "type": "string", "minLength": 1, "maxLength": 80, "description": "Who made it." },
+      "license": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 40,
+        "description": "Its licence, as an SPDX id."
+      },
+      "source": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 200,
+        "description": "Where it comes from: a web page, or 'procedural: <module>' for what the game builds in code."
+      },
+      "credit": {
+        "type": "string",
+        "maxLength": 200,
+        "description": "The credit line the licence asks for."
+      },
+      "licenseFile": {
+        "type": "string",
+        "maxLength": 200,
+        "description": "The licence text that travels with it."
+      },
+      "bounds": {
+        "type": "object",
+        "description": "Its extent in its own frame, in metres: [left, up, forward] (for a car part, car-local).",
+        "required": ["min", "max"],
+        "additionalProperties": false,
+        "properties": {
+          "min": {
+            "type": "array",
+            "description": "The low corner.",
+            "items": { "type": "number", "minimum": -200, "maximum": 200, "description": "Metres." },
+            "minItems": 3,
+            "maxItems": 3
+          },
+          "max": {
+            "type": "array",
+            "description": "The high corner.",
+            "items": { "type": "number", "minimum": -200, "maximum": 200, "description": "Metres." },
+            "minItems": 3,
+            "maxItems": 3
+          }
+        }
+      },
+      "collider": {
+        "type": "object",
+        "description": "The simplified shape the physics uses instead of the model."
+      },
+      "anchors": {
+        "type": "object",
+        "description": "Named points on it: seats, mounts, muzzles, exhausts, wheels."
+      },
+      "palette": { "type": "object", "description": "Its colours, by what they colour." },
+      "lod": {
+        "type": "array",
+        "minItems": 1,
+        "maxItems": 4,
+        "description": "Its levels of detail, finest first.",
+        "items": {
+          "type": "object",
+          "required": ["triangles"],
+          "additionalProperties": false,
+          "properties": {
+            "triangles": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000000,
+              "description": "Triangles drawn."
+            }
+          }
+        }
+      }
+    }
+  }
+}

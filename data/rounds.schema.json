@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "rounds.schema.json",
+  "title": "derby01: rounds",
+  "description": "The flow of a match: rounds start with a countdown, last until one team has a car left, then the next one starts on its own. Points add up over the match.",
+  "type": "object",
+  "required": ["countdown", "between", "map"],
+  "additionalProperties": false,
+  "properties": {
+    "countdown": {
+      "type": "number",
+      "minimum": 1.5,
+      "maximum": 10,
+      "description": "Seconds of countdown before the cars can move."
+    },
+    "between": {
+      "type": "number",
+      "minimum": 2,
+      "maximum": 30,
+      "description": "Seconds the result shows before the next round."
+    },
+    "map": {
+      "enum": ["town", "generated"],
+      "description": "town: every round is played in data/town.json (its start slots first, then random spots for any more cars). generated: a town is laid out for the round's cars from the setup's map number with data/generator.json, and the setup screen gets its New map button."
+    }
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "teams.schema.json",
+  "title": "derby01: teams",
+  "description": "The team colours. A round has 2 to 8 cars and car 1 drives for the first team, car 2 for the second, and so on.",
+  "type": "object",
+  "required": ["teams"],
+  "additionalProperties": false,
+  "properties": {
+    "teams": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "description": "The eight teams in order, one for each car a round can have. Every team's ui colour must differ from the others': a paintball's colour tells the screens whose it is.",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "paint", "ui"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "$ref": "common.schema.json#/$defs/id", "description": "The team's id." },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10,
+            "pattern": "^[A-Za-z][A-Za-z -]*$",
+            "description": "Shown on the scoreboard and as 'RED WINS'. A colour or a plain word, never a person or a brand."
+          },
+          "paint": {
+            "$ref": "common.schema.json#/$defs/colour",
+            "description": "The car's body colour: the paint mask on the car model takes this colour."
+          },
+          "ui": {
+            "$ref": "common.schema.json#/$defs/colour",
+            "description": "The brighter colour of the team's paintballs, splats, name tags and HUD. Must differ from every other team's."
+          }
+        }
+      }
+    }
+  }
+}

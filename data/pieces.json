@@ -1,0 +1,133 @@
+{
+  "pieces": [
+    {
+      "id": "building-brick",
+      "about": "A brick office block with rows of windows, any size. Cars bounce off it.",
+      "asset": "town/building-brick",
+      "size": { "w": [4, 60], "l": [4, 60], "h": [3, 24] },
+      "collider": { "shape": "box" },
+      "components": [{ "type": "solid", "bounce": 0.25, "friction": 0.3 }]
+    },
+    {
+      "id": "building-white",
+      "about": "A white office block with a ribbon window, any size.",
+      "asset": "town/building-white",
+      "size": { "w": [4, 60], "l": [4, 60], "h": [3, 24] },
+      "collider": { "shape": "box" },
+      "components": [{ "type": "solid", "bounce": 0.25, "friction": 0.3 }]
+    },
+    {
+      "id": "stairwell",
+      "about": "A yellow slatted stairwell on the end of a block, a little taller than it.",
+      "asset": "town/stairwell",
+      "size": { "w": [0.5, 4], "l": [1, 8], "h": [3, 26] },
+      "collider": { "shape": "box" },
+      "components": [{ "type": "solid", "bounce": 0.25, "friction": 0.3 }]
+    },
+    {
+      "id": "deck",
+      "about": "The concrete parking deck: a long low block with a rounded end (towards its yaw) and a grating on top.",
+      "asset": "town/deck",
+      "size": { "w": [4, 16], "l": [8, 60], "h": [1, 4] },
+      "collider": { "shape": "rounded" },
+      "components": [{ "type": "solid", "bounce": 0.25, "friction": 0.3 }]
+    },
+    {
+      "id": "canopy",
+      "about": "The yellow entrance canopy: slats on two posts, 4 m apart, standing out 1.6 m towards its yaw.",
+      "asset": "town/canopy",
+      "collider": {
+        "shape": "posts",
+        "posts": [
+          [2, 1.6, 0.15, 3],
+          [-2, 1.6, 0.15, 3]
+        ]
+      },
+      "components": [{ "type": "solid", "bounce": 0.3, "friction": 0.3 }]
+    },
+    {
+      "id": "kiosk",
+      "about": "A small dark kiosk.",
+      "asset": "town/kiosk",
+      "collider": { "shape": "box", "w": 1.6, "l": 2.4, "h": 2.2 },
+      "components": [{ "type": "solid", "bounce": 0.25, "friction": 0.3 }]
+    },
+    {
+      "id": "shed-red",
+      "about": "A little red shed with a solar panel on the roof.",
+      "asset": "town/shed-red",
+      "collider": { "shape": "box", "w": 1.6, "l": 2.2, "h": 2.2 },
+      "components": [{ "type": "solid", "bounce": 0.25, "friction": 0.3 }]
+    },
+    {
+      "id": "shed-wood",
+      "about": "A dark wooden shed, any size.",
+      "asset": "town/shed-wood",
+      "size": { "w": [2, 8], "l": [2, 12], "h": [2, 4] },
+      "collider": { "shape": "box" },
+      "components": [{ "type": "solid", "bounce": 0.25, "friction": 0.3 }]
+    },
+    {
+      "id": "pavilion",
+      "about": "The little brick pavilion with a hipped roof of red tiles.",
+      "asset": "town/pavilion",
+      "collider": { "shape": "box", "w": 6, "l": 7.2, "h": 3 },
+      "components": [{ "type": "solid", "bounce": 0.25, "friction": 0.3 }]
+    },
+    {
+      "id": "rowan",
+      "about": "A rowan with red berries. Hit it at 6 m/s and it snaps: logs and clumps of leaves that cars shove about.",
+      "asset": "town/rowan",
+      "collider": { "shape": "circle", "r": 0.3, "h": 3 },
+      "components": [{ "type": "breakable", "speed": 6, "slow": 0.74, "dmg": 4, "fall": "shatter" }]
+    },
+    {
+      "id": "poplar",
+      "about": "A tall poplar. It snaps like a rowan, a little harder.",
+      "asset": "town/poplar",
+      "collider": { "shape": "circle", "r": 0.35, "h": 6 },
+      "components": [{ "type": "breakable", "speed": 6.5, "slow": 0.7, "dmg": 5, "fall": "shatter" }]
+    },
+    {
+      "id": "lamp",
+      "about": "A black lamp post with a round head. Hit it at 4 m/s and it falls over the way you were going, and goes dark.",
+      "asset": "town/lamp",
+      "collider": { "shape": "circle", "r": 0.15, "h": 5 },
+      "components": [
+        { "type": "breakable", "speed": 4, "slow": 0.86, "dmg": 2, "fall": "tip", "rest": 1.52, "dark": true }
+      ]
+    },
+    {
+      "id": "bollard",
+      "about": "A red and yellow striped bollard: almost anything knocks it flat.",
+      "asset": "town/bollard",
+      "collider": { "shape": "circle", "r": 0.12, "h": 1 },
+      "components": [
+        { "type": "breakable", "speed": 2.2, "slow": 0.95, "dmg": 0.5, "fall": "tip", "rest": 1.55 }
+      ]
+    },
+    {
+      "id": "boulder",
+      "about": "A grey boulder of radius r. It doesn't move.",
+      "asset": "town/boulder",
+      "size": { "r": [0.3, 2] },
+      "collider": { "shape": "circle", "r": 1.05, "h": 1, "scaled": true },
+      "components": [{ "type": "solid", "bounce": 0.3, "friction": 0.3 }]
+    },
+    {
+      "id": "ramp",
+      "about": "A wedge of concrete rising along its yaw from the ground to h at its far edge: drive up it and fly off the top.",
+      "asset": "town/ramp",
+      "size": { "w": [2, 16], "l": [3, 24], "h": [0.2, 3] },
+      "collider": { "shape": "none" },
+      "components": [{ "type": "ramp" }]
+    },
+    {
+      "id": "drop-pad",
+      "about": "A painted pad where supply drops land. With pads in the town, drops land only on pads.",
+      "asset": "town/drop-pad",
+      "collider": { "shape": "none" },
+      "components": [{ "type": "dropPad" }]
+    }
+  ]
+}

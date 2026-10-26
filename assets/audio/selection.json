@@ -1,0 +1,49 @@
+{
+  "status": "Uninstalled sound-effect candidates. The installed CC0 marker sound is documented in paintball-shot-fabianofa.json. The removed Radio recording is documented in radio/today.json; it is not played.",
+  "sounds": [
+    {
+      "event": "crash",
+      "title": "Car Crash Sound",
+      "creator": "DRAGON-STUDIO",
+      "source": "https://pixabay.com/sound-effects/film-special-effects-car-crash-sound-376882/",
+      "direction": "Short collision accent for hard impacts. Scale volume by impact strength and distance; limit overlapping voices.",
+      "credit": "Car Crash Sound — DRAGON-STUDIO, via Pixabay."
+    },
+    {
+      "event": "tyre skid",
+      "title": "Car Braking",
+      "creator": "Universfield",
+      "source": "https://pixabay.com/sound-effects/film-special-effects-car-braking-153305/",
+      "direction": "Candidate for sustained slipping tyres. Audition and find a clean loop before integration; fade with slip strength.",
+      "credit": "Car Braking — Universfield, via Pixabay."
+    },
+    {
+      "event": "engine acceleration",
+      "title": "Car Engine Roaring",
+      "creator": "DRAGON-STUDIO",
+      "source": "https://pixabay.com/sound-effects/film-special-effects-car-engine-roaring-376881/",
+      "direction": "Audition as a throttle accent. Retain the existing engine synthesis for continuous RPM and gear response unless a seamless recording loop works better.",
+      "credit": "Car Engine Roaring — DRAGON-STUDIO, via Pixabay."
+    },
+    {
+      "event": "window destruction",
+      "title": "Glass Shattering",
+      "creator": "DRAGON-STUDIO",
+      "source": "https://pixabay.com/sound-effects/household-glass-shattering-504035/",
+      "direction": "Reserve for a window breaking completely; retain the small synthesized crack for ordinary damage.",
+      "credit": "Glass Shattering — DRAGON-STUDIO, via Pixabay."
+    },
+    {
+      "event": "paint impact",
+      "title": "Splat Sounds",
+      "creator": "XpMonster",
+      "source": "https://pixabay.com/sound-effects/film-special-effects-splat-sounds-419584/",
+      "direction": "Audition and trim individual wet transients for paint impacts. Keep each hit brief so rapid fire stays readable.",
+      "credit": "Splat Sounds — XpMonster, via Pixabay."
+    }
+  ],
+  "paintball_search": "https://pixabay.com/sound-effects/search/paintball/",
+  "paintball_direction": "Audition single-shot pneumatic marker recordings before replacing SFX.gun; avoid firearm reports and long automatic bursts.",
+  "credits_placement": "Always credit recordings when installed. Show each exact title and creator with its source link in the visible front/setup cover credits beneath the title content. Include the Pixabay Content License link. Do not hide credits on the back or in a disclosure. Do not label candidates as used assets.",
+  "license_reference": "https://pixabay.com/service/license-summary/"
+}

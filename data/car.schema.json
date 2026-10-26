@@ -1,0 +1,174 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "car.schema.json",
+  "title": "derby01: the car",
+  "description": "What every car has, whatever its kit: its health and weight, the four seats, the two paintball turrets, the roof radar (the headshot), the rubber bumpers and the lights. Where things sit on the model (seats, turret mounts, the radar mast, the exhausts) is a fact of the car model and lives in its asset entry.",
+  "type": "object",
+  "required": ["hp", "mass", "seats", "turrets", "radar", "bumpers", "lights"],
+  "additionalProperties": false,
+  "properties": {
+    "hp": {
+      "type": "number",
+      "minimum": 30,
+      "maximum": 100,
+      "description": "Chassis health at the start of a round; at 0 the car is wrecked. At most 100: the screens send health as 0 to 100."
+    },
+    "mass": {
+      "type": "number",
+      "minimum": 600,
+      "maximum": 2400,
+      "description": "The car's weight in kg, before its kit's mass factor. Heavier cars shove harder and turn slower."
+    },
+    "seats": {
+      "type": "object",
+      "description": "The four seats, as the setup screen and the HUD name them. Which seat does what is the game's.",
+      "required": ["driver", "hood", "trunk", "mechanic"],
+      "additionalProperties": false,
+      "properties": {
+        "driver": { "$ref": "#/$defs/seat", "description": "Front left: drives." },
+        "hood": { "$ref": "#/$defs/seat", "description": "Rear left: works the turret on the hood." },
+        "trunk": { "$ref": "#/$defs/seat", "description": "Rear right: works the turret on the trunk lid." },
+        "mechanic": { "$ref": "#/$defs/seat", "description": "Front right: keeps the car running." }
+      }
+    },
+    "turrets": {
+      "type": "object",
+      "description": "How far each paintball turret swings and tilts. Where it is mounted is in the car model's anchors.",
+      "required": ["hood", "trunk"],
+      "additionalProperties": false,
+      "properties": {
+        "hood": { "$ref": "#/$defs/turret", "description": "The turret on the hood." },
+        "trunk": { "$ref": "#/$defs/turret", "description": "The turret on the trunk lid." }
+      }
+    },
+    "radar": {
+      "type": "object",
+      "description": "The little radar spinning on every roof. It feeds the radar screen of everyone in that car; paintballs and knocks damage it, and knocking it off is the headshot.",
+      "required": ["period", "range", "hp"],
+      "additionalProperties": false,
+      "properties": {
+        "period": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 4,
+          "description": "Seconds for one turn of the antenna: how often a blip is refreshed."
+        },
+        "range": {
+          "type": "number",
+          "minimum": 30,
+          "maximum": 150,
+          "description": "How far it sees, in metres."
+        },
+        "hp": {
+          "type": "number",
+          "minimum": 5,
+          "maximum": 200,
+          "description": "How much it takes before it is knocked off. A paintball on it does 3.5 times its damage."
+        }
+      }
+    },
+    "bumpers": {
+      "type": "object",
+      "description": "The fat rubber bumpers, like dodgems: they soak up knocks and make cars bounce. Each is two or three pieces that tear off as it wears.",
+      "required": ["front", "rear", "left", "right"],
+      "additionalProperties": false,
+      "properties": {
+        "front": { "$ref": "#/$defs/bumper", "description": "Round the front, three pieces." },
+        "rear": { "$ref": "#/$defs/bumper", "description": "Round the back, three pieces." },
+        "left": { "$ref": "#/$defs/bumper", "description": "Along the left doors, two pieces." },
+        "right": { "$ref": "#/$defs/bumper", "description": "Along the right doors, two pieces." }
+      }
+    },
+    "lights": {
+      "type": "object",
+      "description": "When the head- and taillights give out, by damage taken at that end.",
+      "required": ["flicker", "out"],
+      "additionalProperties": false,
+      "properties": {
+        "flicker": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 200,
+          "description": "Damage at the front (or back) at which those lights start to flicker."
+        },
+        "out": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 300,
+          "description": "Damage at which they go out. Must be more than flicker."
+        }
+      }
+    }
+  },
+  "$defs": {
+    "seat": {
+      "type": "object",
+      "required": ["label", "role"],
+      "additionalProperties": false,
+      "properties": {
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 28,
+          "description": "The seat on the setup screen."
+        },
+        "role": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 16,
+          "description": "The job, in capitals, on the player's HUD."
+        }
+      }
+    },
+    "turret": {
+      "type": "object",
+      "required": ["facing", "arc", "pitchMin", "pitchMax"],
+      "additionalProperties": false,
+      "properties": {
+        "facing": {
+          "type": "number",
+          "minimum": -3.1416,
+          "maximum": 3.1416,
+          "description": "The way it faces at rest, in radians from the car's nose: 0 forward, 3.1416 back."
+        },
+        "arc": {
+          "type": "number",
+          "minimum": 0.3,
+          "maximum": 3.1416,
+          "description": "How far it swings either way from facing, in radians (3.1416 = all the way round)."
+        },
+        "pitchMin": {
+          "type": "number",
+          "minimum": -0.6,
+          "maximum": 0,
+          "description": "How far the barrel tips down, in radians (negative)."
+        },
+        "pitchMax": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 1.2,
+          "description": "How far it tilts up, in radians."
+        }
+      }
+    },
+    "bumper": {
+      "type": "object",
+      "required": ["label", "hp"],
+      "additionalProperties": false,
+      "properties": {
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 24,
+          "description": "How the mechanic's job list names it."
+        },
+        "hp": {
+          "type": "number",
+          "minimum": 4,
+          "maximum": 200,
+          "description": "How much of a beating the whole bumper takes before its last piece tears off."
+        }
+      }
+    }
+  }
+}

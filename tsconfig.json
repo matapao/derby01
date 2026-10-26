@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "es2022",
+    "lib": ["es2023", "dom", "dom.iterable"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "paths": {
+      "/zirbel-net.js": ["./vendor/zirbel-net/index.ts"]
+    },
+    "strict": true
+  },
+  "include": ["src", "test/types"],
+  "extends": "./docs/engineering/tsconfig.portable.json"
+}
