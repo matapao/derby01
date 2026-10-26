@@ -1,6 +1,6 @@
 {
   "name": "derby01",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "A paintball demolition derby in three.js: four cars, four seats in each, bots in the empty ones.",
   "license": "MIT",

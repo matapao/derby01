@@ -44,6 +44,9 @@ and restores detail after sustained headroom; it does not permanently blur the r
 
 ## Breakaway bodywork
 
+Turret camera feeds show paint on their lenses, which fades uniformly; they have no windshield cracks
+or wipers. The car's windshield retains its damage, paint and working wipers for the crew inside.
+
 Substantial crashes loosen the struck doors, hood or trunk before the car is wrecked. Loose doors
 hang and swing on their hinges; the hood and trunk flap while the car moves. A later substantial
 impact can tear them off after a short loose stage. Light bumps and paintballs keep the panels attached.

@@ -18,6 +18,8 @@
     "test/car-interior.test.ts",
     "src/car-panel-motion.ts",
     "test/car-panel-motion.test.ts",
+    "src/paint-view.ts",
+    "test/paint-view.test.ts",
     "src/points-ui.ts",
     "test/gameplay.test.ts",
     "test/geometry.test.ts",

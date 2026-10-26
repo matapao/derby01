@@ -1,3 +1,4 @@
+import { drawPaintLayer, fadeCameraPaint, paintViewSurface } from './paint-view.ts';
 import { requireValue } from './required-fields.ts';
 import type { Car } from './car-types.ts';
 import type { LocalHuman } from './human-types.ts';
@@ -15,7 +16,7 @@ import { FX, share } from './net/effects.ts';
 
 // =====================================================================
 //  Paint: splat stamps, splats on the ground and walls, paint on the cars,
-//  and the wiped glass (windshield + gun sights) with wipers that never stop.
+//  the wiped windshield and paint on the turret camera lenses.
 // =====================================================================
 function seeded(seed: number) {
   return () => {
@@ -438,6 +439,7 @@ export class WipedGlass {
   area: number;
   cv: HTMLCanvasElement;
   g: CanvasRenderingContext2D;
+  readonly surface: 'windshield' | 'camera';
   wipers: { x: number; y: number; len: number }[];
   period: number;
   a0: number;
@@ -458,7 +460,16 @@ export class WipedGlass {
     up: number;
   } | null = null; // the windshield's cracks
   // wipers: [{ x, y, len }] in canvas pixels; angles a0..a1 in radians (0 = blade lying to the left)
-  constructor(w: number, h: number, wipers: WipedGlass['wipers'], period: number, a0: number, a1: number) {
+  constructor(
+    w: number,
+    h: number,
+    wipers: WipedGlass['wipers'],
+    period: number,
+    a0: number,
+    a1: number,
+    surface: 'windshield' | 'camera' = 'windshield',
+  ) {
+    this.surface = surface;
     this.area = w * h;
     this.cv = document.createElement('canvas');
     this.cv.width = w;
@@ -466,7 +477,7 @@ export class WipedGlass {
     this.g = canvasContext(this.cv);
     this.w = w;
     this.h = h;
-    this.wipers = wipers;
+    this.wipers = surface === 'camera' ? [] : wipers;
     this.period = period;
     this.a0 = a0;
     this.a1 = a1;
@@ -508,6 +519,12 @@ export class WipedGlass {
     this.dirty = true;
   }
   update(dt: number) {
+    if (this.surface === 'camera') {
+      const cover = fadeCameraPaint(this.g, this.w, this.h, this.cover, dt);
+      if (cover !== this.cover) this.dirty = true;
+      this.cover = cover;
+      return;
+    }
     const prev = this.ang;
     this.phase += (dt * TAU) / this.period;
     const s = Math.sin(this.phase),
@@ -586,8 +603,8 @@ export function initCarPaint(car: Pick<Car, 'body' | 'paint' | 'rubberMat' | 'tr
       1.3,
       3.0,
     ),
-    hood: new WipedGlass(320, 180, [{ x: 160, y: 190, len: 205 }], 1.15, 0.2, 2.94),
-    trunk: new WipedGlass(320, 180, [{ x: 160, y: 190, len: 205 }], 1.15, 0.2, 2.94),
+    hood: new WipedGlass(320, 180, [], 1, 0, 0, 'camera'),
+    trunk: new WipedGlass(320, 180, [], 1, 0, 0, 'camera'),
   };
   // windshield cracks: their own canvas (the wipers can't wipe those)
   const sh = glass.shield;
@@ -875,57 +892,21 @@ export function drawBalls() {
   if (n && ballMesh.instanceColor) ballMesh.instanceColor.needsUpdate = true;
 }
 
-// The paint overlay over a player's view: the glass they look through, plus its wipers.
+// Windshield effects belong to the driver; turret camera overlays contain paint only.
 export function drawPaintOverlay(h: LocalHuman) {
   const u = h.hud;
   if (!u) return;
-  const cv = u.paint,
-    car = h.car;
-  let gl = null,
-    alpha = 0.94;
-  if (!h.dead && car.alive) {
-    if (h.seat === 0 && h.camMode === 'chase') {
-      gl = car.glass.shield;
-      alpha = 0.8;
-    } else if (h.seat === 1) gl = car.glass.hood;
-    else if (h.seat === 2) gl = car.glass.trunk;
-  }
-  const c = u.paintCtx;
-  if (!gl) {
+  const key = paintViewSurface(h.seat, h.camMode, !h.dead && h.car.alive);
+  const context = u.paintCtx;
+  const canvas = u.paint;
+  if (!key) {
     if (u.last.paintOn) {
-      c.clearRect(0, 0, cv.width, cv.height);
+      context.clearRect(0, 0, canvas.width, canvas.height);
       u.last.paintOn = false;
     }
     return;
   }
   u.last.paintOn = true;
-  const W = cv.width,
-    H = cv.height;
-  c.clearRect(0, 0, W, H);
-  if (gl.crack && gl.crack.level > 0) c.drawImage(gl.crack.cv, 0, 0, W, H); // cracks in the glass
-  c.globalAlpha = alpha;
-  c.drawImage(gl.cv, 0, 0, W, H);
-  c.globalAlpha = 1;
-  const sx = W / gl.w,
-    sy = H / gl.h,
-    a = gl.ang + Math.PI;
-  c.lineCap = 'round';
-  for (const wp of gl.wipers) {
-    const px = wp.x * sx,
-      py = wp.y * sy,
-      tx = px + Math.cos(a) * wp.len * sx,
-      ty = py + Math.sin(a) * wp.len * sy;
-    c.strokeStyle = `rgba(10,10,12,${gl.cover > 0.04 ? 0.9 : 0.5})`;
-    c.lineWidth = Math.max(3, H * 0.011); // fainter on clean glass
-    c.beginPath();
-    c.moveTo(px, py);
-    c.lineTo(tx, ty);
-    c.stroke();
-    c.strokeStyle = 'rgba(255,255,255,0.22)';
-    c.lineWidth = 1;
-    c.beginPath();
-    c.moveTo(px - 2, py - 1);
-    c.lineTo(tx - 2, ty - 1);
-    c.stroke();
-  }
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  drawPaintLayer(context, h.car.glass[key], canvas.width, canvas.height, key === 'shield');
 }
