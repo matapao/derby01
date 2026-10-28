@@ -155,6 +155,9 @@ try {
   await assertClearFeed(page, 1);
   await assertClearFeed(page, 2);
   await changeSeat(page, 3);
+  await press(page, 'Digit1', '1', 49, `${human}.seat === 1`);
+  await press(page, 'Digit3', '3', 51, `${human}.seat === 2`);
+  await press(page, 'Digit2', '2', 50, `${human}.seat === 3`);
   await changeSeat(page, 0);
   await wait(page, `${human}.hud.last.paintOn && ${paintedPixels} > 0`);
   await press(page, 'KeyV', 'v', 86, `${human}.camMode === 'cockpit'`);

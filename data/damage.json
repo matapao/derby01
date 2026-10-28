@@ -29,22 +29,22 @@
     "axleChance": 0.12
   },
   "kick": {
-    "min": 1.5,
-    "roll": 0.32,
-    "pitch": 0.22,
-    "stun": 0.055,
-    "stunMax": 0.6,
+    "min": 2.2,
+    "roll": 0.16,
+    "pitch": 0.12,
+    "stun": 0.02,
+    "stunMax": 0.2,
     "radarAbove": 10,
     "radar": 2,
-    "liftAbove": 5,
-    "lift": 0.5,
-    "liftMax": 4.2
+    "liftAbove": 18,
+    "lift": 0.12,
+    "liftMax": 1.0
   },
   "bumpers": {
-    "crash": 0.6,
-    "wall": 0.6,
+    "crash": 0.62,
+    "wall": 0.62,
     "gun": 0.45,
-    "wear": 1.2,
+    "wear": 1.0,
     "lowHit": 0.8
   },
   "fatigue": 0.5,

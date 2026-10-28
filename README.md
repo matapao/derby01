@@ -1,8 +1,6 @@
 # derby01
 
-<img src="docs/cartridge.png" alt="DERBY01 cartridge logo" width="112" align="right" />
-
-A browser paintball demolition derby. Pick a driver, mechanic or gunner seat; bots fill the rest.
+A browser paintball demolition derby. Pick a driver or turrets-and-engine role; bots fill the rest.
 Play locally or join a Zirbel host.
 
 ## Run
@@ -33,12 +31,10 @@ Browser and network scenarios under `test/live/` require a running game and loca
 - [Gameplay](docs/gameplay.md): controls, seats, radio and round reports.
 - [Shared standard](docs/engineering/STANDARD.md): language and tooling.
 - [Contributing](CONTRIBUTING.md) and [security reports](SECURITY.md).
-- [Public repository source and publication prerequisites](docs/PUBLIC_REPOSITORY.md).
 
 ## License
 
 Code: [MIT](LICENSE). Third-party work keeps its own license and visible front-cover credits.
 Car: Bricchi Games, CC BY 4.0 ([source, changes and license](assets/car/LICENSE.txt)).
 Fonts: Bungee and Barlow Condensed, SIL OFL 1.1 (`assets/fonts`).
-Audio: fabianofa, CC0; optional reviewed CC0 music (`assets/audio`). three.js is MIT.
-See the [asset licence audit](docs/ASSET_LICENSE_AUDIT.md) for licence scope and retained notices.
+Audio: fabianofa, CC0; Action Rock Instrumental by Sub_Clair, Pixabay Content License (`assets/audio`). three.js is MIT.

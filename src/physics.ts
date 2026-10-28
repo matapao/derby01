@@ -185,11 +185,12 @@ function pointVel(car: Car, px: number, pz: number) {
   return { x: car.vel.x + car.yawRate * rz, z: car.vel.z - car.yawRate * rx };
 }
 function applyImpulse(car: Car, px: number, pz: number, ix: number, iz: number) {
-  car.vel.x += ix / car.mass;
-  car.vel.z += iz / car.mass;
+  const cushion = 0.58;
+  car.vel.x += (ix * cushion) / car.mass;
+  car.vel.z += (iz * cushion) / car.mass;
   const rx = px - car.pos.x,
     rz = pz - car.pos.z;
-  car.yawRate += (rz * ix - rx * iz) / car.inertia;
+  car.yawRate += ((rz * ix - rx * iz) * 0.35) / car.inertia;
 }
 
 // Separating-axis test for two oriented boxes in X/Z. Normal points from A to B.
@@ -495,9 +496,8 @@ function zoneAt(car: Car, px: number, pz: number) {
 function onCrash(a: Car, b: Car, px: number, pz: number, j: number, nx = 0, nz = 0) {
   const dvA = j / a.mass,
     dvB = j / b.mass;
-  // (an off-centre hit spends part of the impulse on spin, so the kick is scaled up a little)
-  impactKick(a, -nx, -nz, dvA * 1.5, b);
-  impactKick(b, nx, nz, dvB * 1.5, a);
+  impactKick(a, -nx, -nz, dvA * 0.85, b);
+  impactKick(b, nx, nz, dvB * 0.85, a);
   const la = toLocal(a, px, a.pos.y + 0.5, pz),
     lb = toLocal(b, px, b.pos.y + 0.5, pz);
   const zA = zoneOf(la),

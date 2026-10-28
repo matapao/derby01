@@ -1,16 +1,19 @@
 # derby01
 
 A paintball demolition derby for the browser, in TypeScript and three.js, with clear stylized
-graphics. Two to eight cars, four seats each: a driver, a mechanic and two gunners on the hood and
-trunk turrets. Each player picks a car and a seat (keyboard, mouse, gamepads or touch, split screen; a new
-player gets a car of their own); the CPU fills the rest. On a zirbel host, other screens join online.
+graphics. Two to eight cars, one player per car: sit inside the car, drive with `WASD`, aim with the
+mouse and left-click to fire the front paintball marker, or hold right-click to look back through the
+rear window and shoot pursuers with the rear marker. When the front or rear window gets smashed it
+falls off cleanly, and rubber bumpers cushion impacts like Tivoli bumper cars while panels still
+loosen and fly off. The CPU drives any car without a human player. On a zirbel host, other screens
+join online.
 
 - **The town** is laid out from a map number (_New map_ rolls another; `?map=123` opens one): three
   blocks each way with a ring road and two-lane streets, round an open square with the office and its
   concrete deck. It is sized to the number of cars.
 - **The cars** each drive their own way: stock, rally, drift, sport, muscle. Pick one per car on the setup screen.
 - **Nitro** gives a burst of speed, with a flame out of the exhaust.
-- **Points**: damage you do, wrecks (+250), the roof radar as the headshot (+150), held drifts and
+- **Points**: damage you do, wrecks (+250), knocking off the roof radar (+150), held drifts and
   donuts, last car standing (+200).
 - **Mechanics** fix tyres, fuel, fires, glass and jammed guns in small games on the dashboard screens.
 - **Data for everything you tune** (`data/`, listed in `zirbel.build.json`): the town as a layout of

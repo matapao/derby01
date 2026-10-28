@@ -50,7 +50,30 @@ test('valid settings survive while malformed cars receive safe defaults', () => 
       mapSeed: 99999,
       cars: [
         { team: 0, kit: 'stock', seats: ['bot', 'bot', 'bot', 'bot'] },
-        { team: 1, kit: 'rally', seats: ['keys', 'mouse', 'bot', 'bot'] },
+        { team: 1, kit: 'rally', seats: ['keys', 'bot', 'bot', 'bot'] },
+      ],
+    },
+  );
+});
+test('each car allows only one player in the driver seat without consuming extra devices', () => {
+  assert.deepEqual(
+    decodeSetup(
+      {
+        botSkill: 1,
+        mapSeed: 7,
+        cars: [
+          { kit: 'stock', seats: ['keys', 'pad0', 'mouse', 'bot'] },
+          { kit: 'rally', seats: ['pad0', 'bot', 'bot', 'bot'] },
+        ],
+      },
+      rules,
+    ),
+    {
+      botSkill: 1,
+      mapSeed: 7,
+      cars: [
+        { team: 0, kit: 'stock', seats: ['keys', 'bot', 'bot', 'bot'] },
+        { team: 1, kit: 'rally', seats: ['pad0', 'bot', 'bot', 'bot'] },
       ],
     },
   );

@@ -18,6 +18,7 @@ export const input = (changes: Partial<ControlFrame> = {}): ControlFrame => ({
   fire: false,
   zoom: false,
   switchP: false,
+  seatTo: null,
   camP: false,
   x: 0,
   y: 0,

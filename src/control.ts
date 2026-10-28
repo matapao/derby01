@@ -155,6 +155,7 @@ export function readControls(h: LocalHuman, dt: number): ControlFrame {
     fire: false,
     zoom: false,
     switchP: false,
+    seatTo: null,
     camP: false,
     // mechanic: stick/keys, one-shot direction taps, action (A) and cancel (B); a job tapped on a touch screen
     x: 0,
@@ -203,6 +204,14 @@ export function readControls(h: LocalHuman, dt: number): ControlFrame {
     out.handbrake = k(K.act);
     out.boost = k(K.alt);
     out.switchP = kp(K.seat);
+    out.seatTo =
+      kp('Digit1') || kp('Numpad1')
+        ? 1
+        : kp('Digit2') || kp('Numpad2')
+          ? 3
+          : kp('Digit3') || kp('Numpad3')
+            ? 2
+            : null;
     out.camP = kp(K.cam);
     out.x = ax;
     out.y = ay;
@@ -213,7 +222,7 @@ export function readControls(h: LocalHuman, dt: number): ControlFrame {
     if (dev === 'kbm') {
       out.dYaw = -m.dx * MOUSE_SENS;
       out.dPitch = -m.dy * MOUSE_SENS;
-      out.fire = !!(m.buttons & 1) || k(K.act);
+      out.fire = !!(m.buttons & 1) || (h.seat !== 0 && k(K.act));
       out.zoom = !!(m.buttons & 4);
       out.orbit = m.dx;
       out.a ||= !!(m.buttons & 1);
@@ -317,13 +326,26 @@ export function clampGunToArc(car: Car, s: number) {
   g.pitch = clamp(g.pitch, D.car.turrets[gunKey(s)].pitchMin, D.car.turrets[gunKey(s)].pitchMax);
 }
 
-// Into the next seat a bot has: the bot (a fresh one, nothing carried over) takes the seat this player left.
-export function switchSeat(h: Human) {
+// Into the next seat a bot has (or a chosen turret/engine view): the bot takes the seat this player left.
+export function switchSeat(h: Human, target?: number) {
   const car = h.car;
   if (!car.alive) return;
-  for (let k = 1; k <= 3; k++) {
-    const s = (h.seat + k) % 4;
+  const humanCrew = [1, 2, 3].some((s) => s !== h.seat && car.occ[s]?.kind === 'human');
+  const candidates =
+    target !== undefined
+      ? target >= 1 && target <= 3
+        ? [target]
+        : []
+      : [1, 2, 3].map((k) => (h.seat + k) % 4);
+  for (const s of candidates) {
+    if (s === h.seat) continue;
     if (car.occ[s]?.kind === 'human') continue;
+    if (s > 0 && humanCrew) continue;
+    if (isGunSeat(h.seat)) {
+      const oldGun = gunAt(car, h.seat);
+      oldGun.firing = false;
+      oldGun.zoom = 0;
+    }
     dropJob(h); // (a can poured from is used up)
     car.occ[s] = requireValue(car.occ[h.seat]);
     car.occ[h.seat] = makeBot(car, h.seat);
@@ -351,6 +373,10 @@ export function updateHumanControls(h: LocalHuman, dt: number) {
     return;
   }
   const car = h.car;
+  if (h.seat !== 0 && ctl.seatTo && ctl.seatTo !== h.seat) {
+    switchSeat(h, ctl.seatTo);
+    return;
+  }
   if (ctl.switchP) {
     switchSeat(h);
     return;
@@ -365,6 +391,32 @@ export function updateHumanControls(h: LocalHuman, dt: number) {
       });
     else Object.assign(car.ctrl, { throttle: 0, steer: ctl.steer, handbrake: true, boost: false });
     if (ctl.camP) h.camMode = h.camMode === 'chase' ? 'cockpit' : 'chase';
+    const lookBack = !h.device.startsWith('pad') && ctl.zoom;
+    h.lookBack = lookBack;
+    const gunSeat = lookBack ? 2 : 1,
+      otherSeat = lookBack ? 1 : 2;
+    const g = gunAt(car, gunSeat),
+      other = gunAt(car, otherSeat);
+    other.firing = false;
+    other.zoom = 0;
+    if (lookBack) h.relYawB = clamp((h.relYawB ?? 0) + ctl.dYaw, -TURRETS.trunk.arc, TURRETS.trunk.arc);
+    else h.relYawF = clamp((h.relYawF ?? 0) + ctl.dYaw, -TURRETS.hood.arc, TURRETS.hood.arc);
+    gunAt(car, 1).yaw = wrapPi(car.yaw + TURRETS.hood.center + (h.relYawF ?? 0));
+    gunAt(car, 2).yaw = wrapPi(car.yaw + TURRETS.trunk.center + (h.relYawB ?? 0));
+    g.pitch += ctl.dPitch;
+    clampGunToArc(car, 1);
+    clampGunToArc(car, 2);
+    g.firing = G.state === 'playing' && ctl.fire && !g.jam;
+    if (g.jam) {
+      const J = (h.jamGame ||= GAMES.unjam.init());
+      if (GAMES.unjam.update(J, ctl, dt)) {
+        g.jam = false;
+        g.overheat = false;
+        g.heat = Math.min(g.heat, 0.45);
+        h.jamGame = null;
+        SFX.ok();
+      }
+    } else h.jamGame = null;
   } else if (h.seat === 3) {
     updateHumanMechanic(h, ctl, dt);
   } else {

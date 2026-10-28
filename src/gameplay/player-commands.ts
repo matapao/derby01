@@ -4,7 +4,10 @@ export interface PouringPlayer {
   spilled?: boolean;
 }
 export type PlayerRequest =
-  { a: 'switch' | 'unjam' | 'sync' } | { a: 'fix'; task: string } | { a: 'pour'; d: number; spill: boolean };
+  | { a: 'switch'; to?: 1 | 2 | 3 }
+  | { a: 'unjam' | 'sync' }
+  | { a: 'fix'; task: string }
+  | { a: 'pour'; d: number; spill: boolean };
 export type IndexedRequest = PlayerRequest & { i: number };
 
 /** Flush fuel before completing/cancelling its job. Each delta can be sent only once. */

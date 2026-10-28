@@ -14,6 +14,9 @@ export interface ParticipantState<C> extends ControlReader {
   mech?: MechanicState | null;
   jamGame?: GameStates['unjam'] | null;
   aim?: { yaw: number; pitch: number } | null;
+  lookBack?: boolean;
+  relYawF?: number;
+  relYawB?: number;
   poured?: number;
   spilled?: boolean;
   pourT?: number;
@@ -30,6 +33,9 @@ export function participantState<C>(id: number, device: string, car: C, seat: nu
     mech: null,
     jamGame: null,
     aim: null,
+    lookBack: false,
+    relYawF: 0,
+    relYawB: 0,
   };
 }
 /** Changing seats must not carry a job, jam sequence or predicted aim into the new role. */
@@ -39,6 +45,9 @@ export function resetSeatState<C>(human: ParticipantState<C>, car: C, seat: numb
   human.mech = null;
   human.jamGame = null;
   human.aim = null;
+  human.lookBack = false;
+  human.relYawF = 0;
+  human.relYawB = 0;
   human.mouseSteer = 0;
   human.stickDir = null;
   human.flickCd = 0;

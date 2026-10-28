@@ -45,6 +45,10 @@
     "test/music-library.test.ts",
     "src/render-quality.ts",
     "test/render-quality.test.ts",
+    "src/picture-ui.ts",
+    "test/picture-ui.test.ts",
+    "src/game-soundtrack.ts",
+    "test/game-soundtrack.test.ts",
     "src/competition-ui.ts"
   ]
 }

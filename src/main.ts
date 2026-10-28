@@ -1,6 +1,7 @@
 // Composition root: load the dependency graph, wire reverse calls, then boot the game.
 import { bindAudio } from './audio.ts';
-import { mountSoundControls } from './music-ui.ts';
+import { mountPictureControls } from './picture-ui.ts';
+import { gameSoundtrack } from './game-soundtrack.ts';
 import { mountOnboarding } from './onboarding.ts';
 import { mountCompetitionPanel } from './competition-ui.ts';
 import { currentCompetitionSummary, anonymousRecords, subscribeCompetition } from './competition.ts';
@@ -42,7 +43,10 @@ try {
 } catch {
   /* auto */
 }
-const soundControls = mountSoundControls(() => flow.pauseGame(true), { get: getRenderMode, set: setPicture });
+const pictureControls = mountPictureControls(() => flow.pauseGame(true), {
+  get: getRenderMode,
+  set: setPicture,
+});
 const onboarding = mountOnboarding();
 const standings = mountCompetitionPanel({
   summary: currentCompetitionSummary,
@@ -55,10 +59,16 @@ document.getElementById('helpBtn')?.addEventListener('click', () => {
   flow.pauseGame(true);
   onboarding.start(true);
 });
-document.getElementById('soundBtn')?.addEventListener('click', soundControls.open);
+document.getElementById('soundBtn')?.addEventListener('click', pictureControls.open);
 window.addEventListener('pagehide', (event) => {
+  void gameSoundtrack.pause().catch((error: unknown) => {
+    console.warn('Soundtrack could not pause.', error);
+  });
   if (!event.persisted) {
-    soundControls.destroy();
+    void gameSoundtrack.destroy().catch((error: unknown) => {
+      console.warn('Soundtrack could not close.', error);
+    });
+    pictureControls.destroy();
     onboarding.destroy();
     standings.destroy();
   }

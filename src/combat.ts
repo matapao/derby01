@@ -296,7 +296,7 @@ function ballHit(b: Projectile<Car>, p: THREE.Vector3, hit: RayHit) {
   if (hit.kind === 'car' && hit.car && hit.radar) {
     // shot the radar: it takes the hit, the car doesn't
     if (!hit.car.radar.destroyed && b.car && b.car.team !== hit.car.team && G.state === 'playing')
-      award(b.car, POINTS.radarHit, 'HEADSHOT', 'hs');
+      award(b.car, POINTS.radarHit, 'RADAR HIT', 'hs');
     damageRadar(hit.car, b.dmg * GUN.radar.hit, b.car);
     if (b.shooter && b.shooter.kind === 'human') hitMarkFx(b.car, b.shooter.h.seat);
   } else if (hit.kind === 'car' && hit.car) {

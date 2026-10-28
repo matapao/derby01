@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "car.schema.json",
   "title": "derby01: the car",
-  "description": "What every car has, whatever its kit: its health and weight, the four seats, the two paintball turrets, the roof radar (the headshot), the rubber bumpers and the lights. Where things sit on the model (seats, turret mounts, the radar mast, the exhausts) is a fact of the car model and lives in its asset entry.",
+  "description": "What every car has, whatever its kit: its health and weight, the four seats, the two paintball turrets, the roof radar, the rubber bumpers and the lights. Where things sit on the model (seats, turret mounts, the radar mast, the exhausts) is a fact of the car model and lives in its asset entry.",
   "type": "object",
   "required": ["hp", "mass", "seats", "turrets", "radar", "bumpers", "lights"],
   "additionalProperties": false,
@@ -43,7 +43,7 @@
     },
     "radar": {
       "type": "object",
-      "description": "The little radar spinning on every roof. It feeds the radar screen of everyone in that car; paintballs and knocks damage it, and knocking it off is the headshot.",
+      "description": "The little radar spinning on every roof. It feeds the radar screen of everyone in that car; paintballs and knocks damage it, and knocking it off blinds their radar screen until repaired.",
       "required": ["period", "range", "hp"],
       "additionalProperties": false,
       "properties": {

@@ -426,6 +426,8 @@ export function makePaintedMaterial(params: THREE.MeshStandardMaterialParameters
 // The windshield is left alone here: it has its own paint (that the wipers clear) and cracks.
 const GLASS_FRAG = `uniform sampler2D paintAtlas;
 uniform sampler2D crackAtlas;
+uniform float frontGlassOn;
+uniform float rearGlassOn;
 varying vec3 vCar;
 varying vec3 vCarN;
 bool glassUV(out vec2 uv) {
@@ -440,7 +442,12 @@ bool glassUV(out vec2 uv) {
 }
 `;
 export function makeGlassMaterial() {
-  const u = { paintAtlas: { value: EMPTY_TEX }, crackAtlas: { value: EMPTY_TEX } };
+  const u = {
+    paintAtlas: { value: EMPTY_TEX },
+    crackAtlas: { value: EMPTY_TEX },
+    frontGlassOn: { value: 1 },
+    rearGlassOn: { value: 1 },
+  };
   const m = new THREE.MeshStandardMaterial({
     color: 0x1b2833,
     transparent: true,
@@ -463,6 +470,11 @@ export function makeGlassMaterial() {
       sh.fragmentShader.replace(
         '#include <color_fragment>',
         `#include <color_fragment>
+  vec3 ga = abs(normalize(vCarN));
+  if (!(ga.x >= ga.y && ga.x >= ga.z)) {
+    if (vCar.z < -0.3 && rearGlassOn < 0.5) discard;
+    if (vCar.z >= -0.3 && frontGlassOn < 0.5) discard;
+  }
   vec2 guv;
   if ( glassUV( guv ) ) {
     vec4 ck = texture2D( crackAtlas, guv ), pnt = texture2D( paintAtlas, guv );

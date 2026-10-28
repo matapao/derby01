@@ -126,6 +126,14 @@ test('player commands flush fuel before consuming the can and cannot resend old 
     { i: 2, a: 'pour', d: 12, spill: true },
     { i: 2, a: 'fix', task: 'fuel' },
   ]);
+  commands.ask(player, { a: 'switch', to: 1 });
+  commands.ask(player, { a: 'switch', to: 3 });
+  commands.ask(player, { a: 'switch', to: 2 });
+  assert.deepEqual(sent.slice(2), [
+    { i: 2, a: 'switch', to: 1 },
+    { i: 2, a: 'switch', to: 3 },
+    { i: 2, a: 'switch', to: 2 },
+  ]);
 });
 test('composition bindings fail before boot and cannot be silently replaced', () => {
   const binding = requiredBinding<{ pause(): void }>('Lifecycle');

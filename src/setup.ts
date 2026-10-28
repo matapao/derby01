@@ -47,7 +47,7 @@ export function decodeSetup(value: unknown, rules: SetupRules): Setup | null {
           : rules.defaultKits[team % rules.defaultKits.length]!,
       seats:
         Array.isArray(car['seats']) && car['seats'].length === 4
-          ? car['seats'].map(seat)
+          ? car['seats'].map((entry, si) => (si === 0 ? seat(entry) : 'bot'))
           : ['bot', 'bot', 'bot', 'bot'],
     };
   });

@@ -149,7 +149,7 @@ export function hitMarkFx(car: Car, seat: number) {
 const AWARD_STYLES: readonly (readonly [RegExp, string])[] = [
   [/^ROUND WIN$/, 'win'],
   [/^WRECK$/, 'wreck'],
-  [/^(RADAR )?HEADSHOT$/, 'hs'],
+  [/^RADAR (HIT|OUT)$/, 'hs'],
   [/^BURN \d{1,2}\.\ds$/, 'burn'],
 ];
 
@@ -165,7 +165,7 @@ export function awardFx(car: Car, pts: number, label: string) {
 export function feedRadarFx(by: Car, car: Car, pts: number) {
   if (share(FX.feedRadar, feedRadarFx, [by, car, pts])) return;
   feed(
-    `<b style="--c:${requireValue(TEAMS[by.team]).ui}">${carLabel(by)}</b> took out <b style="--c:${requireValue(TEAMS[car.team]).ui}">${carLabel(car)}</b>'s radar <span class="hs">HEADSHOT +${Math.round(pts)}</span>`,
+    `<b style="--c:${requireValue(TEAMS[by.team]).ui}">${carLabel(by)}</b> took out <b style="--c:${requireValue(TEAMS[car.team]).ui}">${carLabel(car)}</b>'s radar <span class="hs">RADAR OUT +${Math.round(pts)}</span>`,
   );
 }
 
@@ -200,8 +200,8 @@ export function noteFx(car: Car, note: number) {
 }
 
 /** A radar shot off: the crew of the car that did it gets the hit and kill marks. */
-export function headshotMarkFx(by: Car) {
-  if (share(FX.headshotMark, headshotMarkFx, [by])) return;
+export function radarMarkFx(by: Car) {
+  if (share(FX.radarMark, radarMarkFx, [by])) return;
   for (const h of G.humans)
     if (h.car === by) {
       h.hitMark = 1;
@@ -235,8 +235,8 @@ export function playScoreEvent(event: ScoreEvent): void {
     case 'radar':
       feedRadarFx(presentedCar(event.source), presentedCar(event.victim), event.points);
       break;
-    case 'headshot':
-      headshotMarkFx(presentedCar(event.car));
+    case 'radarMark':
+      radarMarkFx(presentedCar(event.car));
       break;
     case 'burnFeed':
       feedBurnFx(presentedCar(event.car), event.seconds, event.points);

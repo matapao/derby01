@@ -35,7 +35,7 @@ export interface ScoreRules {
 export type ScoreEvent =
   | { kind: 'award'; car: ScoringCar; points: number; label: string }
   | { kind: 'radar'; source: ScoringCar; victim: ScoringCar; points: number }
-  | { kind: 'headshot'; car: ScoringCar }
+  | { kind: 'radarMark'; car: ScoringCar }
   | { kind: 'burnFeed'; car: ScoringCar; seconds: number; points: number }
   | { kind: 'burnEnd'; car: ScoringCar; keep: boolean };
 export const newBurn = (): BurnState => ({ t: 0, off: 0, on: false, kick: -99 });
@@ -71,9 +71,9 @@ export function createScoring(state: ScoreState, rules: ScoreRules, emit: (event
   function scoreRadar(victim: ScoringCar, source: ScoringCar | null): void {
     const by = source || (state.time - victim.lastHitTime < 2.5 ? victim.lastHitBy : null);
     if (!by || by === victim || by.team === victim.team || state.state !== 'playing') return;
-    award(by, rules.radar, 'RADAR HEADSHOT', 'hs');
+    award(by, rules.radar, 'RADAR OUT', 'hs');
     emit({ kind: 'radar', source: by, victim, points: rules.radar });
-    emit({ kind: 'headshot', car: by });
+    emit({ kind: 'radarMark', car: by });
   }
   function endBurn(car: ScoringCar, keep: boolean): void {
     const burn = car.burn;

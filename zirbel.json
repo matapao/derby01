@@ -1,6 +1,6 @@
 {
   "id": "derby01",
-  "version": "0.1.1",
+  "version": "0.1.4",
   "title": "DERBY01",
   "back": [
     "Two to eight cars, four seats each: a driver, two gunners firing paint from the turrets, and a mechanic.",
@@ -64,9 +64,16 @@
     {
       "slot": "Paintball marker",
       "artist": "fabianofa",
-      "work": "paintball_shoot1.wav",
+      "work": "paintball_shoot1.wav (dry edit)",
       "url": "https://freesound.org/people/fabianofa/sounds/98189/",
       "license": "CC0-1.0"
+    },
+    {
+      "slot": "Game soundtrack",
+      "artist": "Sub_Clair",
+      "work": "Action Rock Instrumental",
+      "url": "https://pixabay.com/music/rock-action-rock-instrumental-614585/",
+      "license": "Pixabay Content License"
     }
   ],
   "metrics": [
@@ -214,5 +221,6 @@
       "help": "Highest measured timing and direction accuracy (percent) with at least five local attempts",
       "record": "high"
     }
-  ]
+  ],
+  "stage": "released"
 }

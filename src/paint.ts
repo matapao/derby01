@@ -10,7 +10,7 @@ import * as THREE from 'three';
 import { ATLAS, GLASS, SHARED, TAU, TEAMS, _q1, _v1, _v2, _v3, clamp, pick, rand } from './core.ts';
 import { scene } from './world.ts';
 import { G } from './state.ts';
-import { SMOKE } from './fx.ts';
+import { SMOKE, addDebris } from './fx.ts';
 import { SFX } from './audio.ts';
 import { FX, share } from './net/effects.ts';
 
@@ -405,19 +405,21 @@ export function paintHitCar(
   css: string,
 ) {
   if (share(FX.paintHitCar, paintHitCar, [car, l, axis, sign, css])) return;
-  paintAtlasAt(car, l, axis, sign, rand(0.3, 0.46), css);
+  if (!(axis === 2 && sign < 0 && l.y > 0.9 && car.glass.shield.crack.rearShattered))
+    paintAtlasAt(car, l, axis, sign, rand(0.3, 0.46), css);
   const GL = car.glass;
   // windshield: hits on the front above the hood line, or on top between the roof and the hood
   if ((axis === 2 && sign > 0 && l.y > 0.86) || (axis === 1 && sign > 0 && l.z > 0.3 && l.z < 1.2)) {
     const u = clamp((0.76 - l.x) / 1.52, 0.06, 0.94);
     const v = axis === 2 ? clamp((1.45 - l.y) / 0.52, 0.08, 0.92) : clamp((l.z - 0.45) / 0.55, 0.08, 0.92);
     GL.shield.splat(u, v, rand(78, 118), css);
-    if (Math.random() < 0.55) crackWindshield(car, u, v, rand(0.7, 1.2));
+    if (Math.random() < 0.85) crackWindshield(car, u, v, rand(0.9, 1.3));
   } else if (axis === 1 && sign > 0 && l.z >= 1.2)
     GL.shield.spray(rand(4, 9) | 0, css); // hood hits spatter up the glass
   else if (axis === 2 && sign > 0) GL.shield.spray(3, css);
   // side and rear windows crack where the ball lands
-  if (Math.random() < 0.5 && (axis === 0 || (axis === 2 && sign < 0))) crackGlassAt(car, l, rand(0.6, 1.1));
+  if (Math.random() < 0.85 && (axis === 0 || (axis === 2 && sign < 0)))
+    crackGlassAt(car, l, rand(0.85, 1.25));
   // the little cameras on the turrets
   const dh = Math.hypot(l.x, l.y - 1.15, l.z - 1.45),
     dtk = Math.hypot(l.x, l.y - 1.05, l.z + 1.72);
@@ -456,6 +458,8 @@ export class WipedGlass {
     tex: THREE.CanvasTexture;
     level: number;
     shattered: boolean;
+    rearLevel?: number;
+    rearShattered?: boolean;
     dirty: boolean;
     up: number;
   } | null = null; // the windshield's cracks
@@ -489,6 +493,7 @@ export class WipedGlass {
   }
   // u, v in 0..1; size = width of the blob in canvas pixels
   splat(u: number, v: number, size: number, css: string) {
+    if (this.surface === 'windshield' && this.crack?.shattered) return;
     const s = size / BLOB_FRAC,
       g = this.g;
     g.save();
@@ -500,6 +505,7 @@ export class WipedGlass {
     this.dirty = true;
   }
   spray(n: number, css: string) {
+    if (this.surface === 'windshield' && this.crack?.shattered) return;
     const g = this.g;
     g.fillStyle = css;
     for (let i = 0; i < n; i++) {
@@ -755,25 +761,70 @@ function drawCrackWeb(g: CanvasRenderingContext2D, x: number, y: number, size: n
   g.fill();
 }
 
-// Crack the windshield at (u, v), 0..1. strength ~1 for a paintball, more for crashes.
+const DEBRIS_GLASS_MAT = new THREE.MeshStandardMaterial({
+  color: 0x355068,
+  transparent: true,
+  opacity: 0.52,
+  roughness: 0.1,
+  metalness: 0.38,
+  side: THREE.DoubleSide,
+});
+
+function detachWindowPane(car: Car, kind: 'shield' | 'rear') {
+  const f = GLASS[kind],
+    s = f.len / 2;
+  car.body.updateWorldMatrix(true, false);
+  const pos = new THREE.Vector3(0, f.y + f.uy * s, f.z + f.uz * s).applyMatrix4(car.body.matrixWorld);
+  const basis = new THREE.Matrix4().makeBasis(
+    new THREE.Vector3(kind === 'shield' ? -1 : 1, 0, 0),
+    new THREE.Vector3(0, f.uy, f.uz),
+    new THREE.Vector3(0, f.ny, f.nz),
+  );
+  const quat = new THREE.Quaternion()
+    .setFromRotationMatrix(basis)
+    .premultiply(car.body.getWorldQuaternion(_q1));
+  const out = new THREE.Vector3(0, f.ny, f.nz).applyQuaternion(car.body.getWorldQuaternion(_q1));
+  const vel = car.vel.clone().multiplyScalar(0.6).addScaledVector(out, rand(2.5, 4.8));
+  vel.y += rand(2.2, 4.2);
+  addDebris(new THREE.Mesh(SHIELD_GEO, DEBRIS_GLASS_MAT), pos, quat, vel, 8);
+  const u = car.glassMat.userData['u'];
+  if (kind === 'shield') {
+    if (u?.frontGlassOn) u.frontGlassOn.value = 0;
+    car.shieldFilm.visible = false;
+    car.crackFilm.visible = false;
+    for (const arm of car.wiperArms) arm.visible = false;
+    const sh = car.glass.shield;
+    sh.g.clearRect(0, 0, sh.w, sh.h);
+    sh.cover = 0;
+    sh.dirty = true;
+  } else {
+    if (u?.rearGlassOn) u.rearGlassOn.value = 0;
+    const B = ATLAS.B;
+    car.cracks.g.clearRect(requireValue(B[0]), requireValue(B[1]), requireValue(B[2]), requireValue(B[3]));
+    car.cracks.dirty = true;
+    car.atlas.g.clearRect(
+      requireValue(B[0]),
+      requireValue(B[1]),
+      requireValue(B[2]),
+      Math.round((ATLAS.YMAX - 0.88) * ATLAS.PX),
+    );
+    car.atlas.dirty = true;
+  }
+}
+
+// Crack the windshield at (u, v), 0..1. When pretty smashed, it falls right off.
 export function crackWindshield(car: Car, u: number, v: number, strength = 1) {
   if (share(FX.crackWindshield, crackWindshield, [car, u, v, strength])) return;
   const C = car.glass.shield.crack,
     g = C.g,
     w = car.glass.shield.w,
     h = car.glass.shield.h;
+  if (C.shattered) return;
   drawCrackWeb(g, u * w, v * h, 34 + strength * 30, 1.1 + strength * 0.25);
-  C.level = Math.min(1.2, C.level + 0.07 * strength);
-  if (C.level > 0.55) {
-    g.fillStyle = `rgba(222,232,238,${0.05 * strength})`;
-    g.fillRect(0, 0, w, h);
-  } // going milky
-  if (C.level >= 1 && !C.shattered) {
-    C.shattered = true; // crazed all over
-    for (let i = 0; i < 14; i++)
-      drawCrackWeb(g, rand(0.05, 0.95) * w, rand(0.05, 0.95) * h, rand(50, 110), 1.2);
-    g.fillStyle = 'rgba(222,232,238,0.25)';
-    g.fillRect(0, 0, w, h);
+  C.level = Math.min(1.2, C.level + 0.24 * strength);
+  if (C.level >= 0.42 && !C.shattered) {
+    C.shattered = true;
+    detachWindowPane(car, 'shield');
   }
   C.dirty = true;
   if (G.humans.some((hm) => hm.car === car)) SFX.crack(car.pos, strength);
@@ -783,7 +834,15 @@ export function clearWindshieldCracks(car: Car) {
   C.g.clearRect(0, 0, C.cv.width, C.cv.height);
   C.level = 0;
   C.shattered = false;
+  C.rearLevel = 0;
+  C.rearShattered = false;
   C.dirty = true;
+  const u = car.glassMat.userData['u'];
+  if (u?.frontGlassOn) u.frontGlassOn.value = 1;
+  if (u?.rearGlassOn) u.rearGlassOn.value = 1;
+  car.shieldFilm.visible = true;
+  car.crackFilm.visible = true;
+  for (const arm of car.wiperArms) arm.visible = true;
 }
 
 // Crack a side or rear window (atlas view `reg` at atlas pixel u, v).
@@ -804,15 +863,23 @@ export function crackGlassAt(car: Car, l: { x: number; y: number; z: number }, s
   if (Math.abs(l.x) > 0.6 && l.y > 0.95 && l.y < 1.42 && l.z > -0.95 && l.z < 0.85) {
     crackWindowAt(car, l.x > 0 ? A.L : A.R, (l.z - A.ZMIN) * A.PX, (A.YMAX - l.y) * A.PX, strength);
   } else if (l.z < -0.75 && l.y > 0.9 && l.y < 1.43) {
+    const C = car.glass.shield.crack;
+    if (C.rearShattered) return;
     crackWindowAt(car, A.B, (clamp(l.x, -0.7, 0.7) - A.XMIN) * A.PX, (A.YMAX - l.y) * A.PX, strength);
+    C.rearLevel = Math.min(1.2, (C.rearLevel ?? 0) + 0.28 * strength);
+    if (C.rearLevel >= 0.42) {
+      C.rearShattered = true;
+      detachWindowPane(car, 'rear');
+    }
+    if (G.humans.some((hm) => hm.car === car)) SFX.crack(car.pos, strength);
   }
 }
 
-// Crashes: hard knocks crack the glass nearest the hit.
+// Crashes: knocks crack the glass nearest the hit, and front/rear windows fall off early.
 export function crackFromKnock(car: Car, zone: DamageZone | null, cause: DamageCause, dv: number) {
   if (share(FX.crackFromKnock, crackFromKnock, [car, zone, cause, dv])) return;
-  if (dv < 5.5 || !car.alive) return;
-  const s = Math.min(3, (dv - 4) / 3);
+  if (dv < 3.2 || !car.alive) return;
+  const s = Math.min(3, (dv - 2.2) / 2);
   if (zone === 'front') crackWindshield(car, rand(0.15, 0.85), rand(0.3, 0.9), s);
   if (zone === 'lf' || zone === 'lr')
     crackGlassAt(car, { x: 0.8, y: rand(1.0, 1.35), z: zone === 'lf' ? rand(0, 0.8) : rand(-0.9, -0.1) }, s);

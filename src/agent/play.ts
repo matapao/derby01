@@ -601,7 +601,7 @@ export class PlaySession {
         });
         return;
       case 'feedRadar':
-        this.event({ type: 'headshot', by: e.by, car: e.car, points: Math.round(e.points) });
+        this.event({ type: 'radar', by: e.by, car: e.car, points: Math.round(e.points) });
         return;
       case 'feedBurn':
         this.event({ type: 'burn', car: e.car, seconds: r1(e.seconds), points: Math.round(e.points) });
@@ -620,8 +620,8 @@ export class PlaySession {
       case 'takeDrop':
         if (this.drops.delete(e.id)) this.event({ type: 'taken', id: e.id });
         return;
-      case 'headshotMark':
-        if (me === e.by) this.event({ type: 'headshot', by: e.by });
+      case 'radarMark':
+        if (me === e.by) this.event({ type: 'radar', by: e.by });
         return;
       case 'burnEnd':
         if (me === e.car) this.event({ type: e.kept ? 'burn banked' : 'burn lost' });

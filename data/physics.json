@@ -3,7 +3,7 @@
   "engine": { "top": 29, "accel": 14.5, "brake": 25, "brakeReversing": 16, "reverse": 9.5, "reverseTop": 13 },
   "nitro": { "top": 40, "topPerKick": 5, "accel": 23, "burn": 0.38, "refill": 0.11 },
   "drag": { "rolling": 0.6, "air": 0.0105, "handbrake": 8, "coast": 1.6, "wreck": 5, "grass": 7 },
-  "grip": { "tyres": 19, "handbrake": 6.5, "wreck": 11, "stunned": 0.65, "sliding": 0.6, "slideAbove": 9 },
+  "grip": { "tyres": 19, "handbrake": 6.5, "wreck": 11, "stunned": 0.25, "sliding": 0.6, "slideAbove": 9 },
   "steering": {
     "lockSlow": 0.62,
     "lockFast": 0.2,
@@ -16,7 +16,7 @@
     "handbrakeTurn": 1.45
   },
   "collisions": {
-    "cars": { "bounce": 0.28, "rubber": 0.34, "friction": 0.35 },
-    "edge": { "bounce": 0.24, "rubber": 0.3, "friction": 0.25 }
+    "cars": { "bounce": 0.1, "rubber": 0.2, "friction": 0.15 },
+    "edge": { "bounce": 0.1, "rubber": 0.16, "friction": 0.14 }
   }
 }

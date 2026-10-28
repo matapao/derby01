@@ -370,7 +370,7 @@ test('marker recording loads only after unlock, falls back while pending and rep
     () => 0.5,
     async (url) => {
       requests++;
-      assert.equal(url, 'assets/audio/paintball-shot-fabianofa.mp3');
+      assert.equal(url, 'assets/audio/paintball-marker-dry-fabianofa.wav');
       return bytes.promise;
     },
   );
@@ -387,8 +387,13 @@ test('marker recording loads only after unlock, falls back while pending and rep
   assert.equal(audio.oscillators.length, 0, 'marker firing has no synthesized pitched tone');
   bytes.resolve(new ArrayBuffer(8));
   await new Promise<void>((resolve) => setImmediate(resolve));
+  const filtersBeforeShot = audio.filters.length;
   sound.gun(null);
+  assert.equal(audio.sources.length, 2, 'one ready shot adds only one recording voice');
   assert.equal(audio.sources.at(-1)?.buffer, audio.decoded, 'ready shots play the actual recording');
+  assert.equal(audio.sources.at(-1)?.playbackRate.value, 1);
+  assert.equal(audio.gains.at(-1)?.gain.value, 0.7, 'the dry marker uses its reviewed mix level');
+  assert.equal(audio.filters.length, filtersBeforeShot, 'ready shots do not also create fallback noise');
   assert.equal(audio.oscillators.length, 0);
   sound.setVolume(2);
   assert.equal(audio.gains[0]?.gain.value, 1);
@@ -401,6 +406,40 @@ test('marker recording loads only after unlock, falls back while pending and rep
   assert.equal(audio.closed(), 1);
   assert.equal(audio.sources.at(-1)?.stops, 1);
   assert.equal(audio.sources.at(-1)?.disconnects, 1);
+});
+
+test('dry marker shots retain distance attenuation, nearest-listener choice and slight pitch variation', async () => {
+  const audio = audioFixture();
+  let variation = 0.5;
+  const sound = createSoundEffects(
+    () => audio.context,
+    () => variation,
+    async () => new ArrayBuffer(8),
+  );
+  sound.init();
+  await new Promise<void>((resolve) => setImmediate(resolve));
+  sound.listeners.push(new Vector3(0, 0, 0));
+  variation = 0;
+  sound.gun(new Vector3(0, 0, 0));
+  const nearGain = audio.gains.at(-1)?.gain.value;
+  assert.equal(nearGain, 0.7);
+  assert.equal(audio.sources.at(-1)?.playbackRate.value, 0.96);
+
+  variation = 1;
+  const distantPosition = new Vector3(100, 0, 0);
+  sound.gun(distantPosition);
+  const distantGain = audio.gains.at(-1)?.gain.value;
+  assert.ok(distantGain !== undefined && distantGain > 0 && distantGain < nearGain);
+  assert.equal(audio.sources.at(-1)?.playbackRate.value, 1.04);
+
+  sound.listeners.push(distantPosition);
+  sound.gun(distantPosition);
+  assert.equal(audio.gains.at(-1)?.gain.value, nearGain, 'the closest local listener owns attenuation');
+  assert.equal(audio.sources.length, 3, 'three ready shots create three recording voices');
+  assert.ok(audio.sources.every((source) => source.buffer === audio.decoded));
+  assert.equal(audio.filters.length, 0, 'ready firing has no synthesized noise layer');
+  assert.equal(audio.oscillators.length, 0, 'ready firing has no synthesized tone layer');
+  sound.dispose();
 });
 
 test('sample failure remains playable through fallback and retries on another unlock', async () => {

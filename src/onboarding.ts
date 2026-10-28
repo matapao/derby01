@@ -14,8 +14,14 @@ type GuidePoints = Pick<typeof D.points, 'damage' | 'wreck' | 'radarHit' | 'rada
 /** Text uses the current room's scoring values, including rooms with custom tuning. */
 export function onboardingRoles(points: GuidePoints): readonly OnboardingRole[] {
   const gunControls = [
-    { device: 'Keyboard + mouse', actions: 'Mouse aims · left click fires · right click zooms.' },
-    { device: 'Split keyboard', actions: 'WASD + Space, or arrows + Enter, to aim and fire.' },
+    {
+      device: 'Keyboard + mouse',
+      actions: 'Mouse aims · left click fires · right click zooms · 1/2/3 or C switches view.',
+    },
+    {
+      device: 'Split keyboard',
+      actions: 'WASD + Space, or arrows + Enter, to aim and fire · 1/2/3 switches view.',
+    },
     { device: 'Gamepad', actions: 'Right stick aims · RT fires · LT zooms · directions clear jams.' },
     { device: 'Touch', actions: 'Drag aims · hold FIRE · tap ZOOM · arrows clear jams.' },
   ];

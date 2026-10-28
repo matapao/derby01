@@ -37,7 +37,7 @@ export const FX = {
   breakProp: 19,
   placeDrop: 20,
   takeDrop: 21,
-  headshotMark: 22,
+  radarMark: 22,
   burnEnd: 23,
   radarHit: 24,
 } as const;

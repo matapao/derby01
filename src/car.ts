@@ -74,18 +74,69 @@ function numberTexture(num: number) {
   return t;
 }
 
+const MARKER_SILVER = new THREE.MeshStandardMaterial({
+  color: 0xd4dde6,
+  roughness: 0.26,
+  metalness: 0.78,
+});
+const MARKER_ANODIZED = new THREE.MeshStandardMaterial({
+  color: 0x2978a0,
+  roughness: 0.28,
+  metalness: 0.62,
+});
+const MARKER_GOLD = new THREE.MeshStandardMaterial({
+  color: 0xdba02e,
+  roughness: 0.28,
+  metalness: 0.72,
+});
+const MARKER_TANK = new THREE.MeshStandardMaterial({
+  color: 0xc84630,
+  roughness: 0.3,
+  metalness: 0.35,
+});
 const TURRET_GEO = {
-  ring: new THREE.CylinderGeometry(0.16, 0.2, 0.07, 14).translate(0, 0.035, 0),
-  housing: mergeGeometries([
-    boxGeo(0.24, 0.15, 0.28, 0, 0.075, -0.02),
-    boxGeo(0.36, 0.2, 0.035, 0, 0.11, 0.15, -0.2),
+  puck: new THREE.CylinderGeometry(0.068, 0.084, 0.036, 14).translate(0, 0.018, 0),
+  collar: new THREE.CylinderGeometry(0.052, 0.056, 0.014, 12).translate(0, 0.038, 0),
+  yoke: mergeGeometries([
+    new THREE.CylinderGeometry(0.048, 0.052, 0.022, 12).translate(0, 0.011, 0),
+    boxGeo(0.096, 0.016, 0.038, 0, 0.024, 0),
+    boxGeo(0.014, 0.115, 0.034, 0.042, 0.078, 0),
+    boxGeo(0.014, 0.115, 0.034, -0.042, 0.078, 0),
+    new THREE.CylinderGeometry(0.018, 0.018, 0.108, 10).rotateZ(Math.PI / 2).translate(0, 0.134, 0),
   ]),
-  barrel: mergeGeometries([
-    new THREE.CylinderGeometry(0.022, 0.028, 0.62, 8).rotateX(Math.PI / 2).translate(0, 0, 0.31),
-    new THREE.CylinderGeometry(0.036, 0.036, 0.08, 8).rotateX(Math.PI / 2).translate(0, 0, 0.6),
+  body: mergeGeometries([
+    new THREE.CylinderGeometry(0.027, 0.027, 0.25, 12).rotateX(Math.PI / 2).translate(0, 0, -0.01),
+    new THREE.CylinderGeometry(0.023, 0.023, 0.21, 12).rotateX(Math.PI / 2).translate(0, -0.036, 0),
+    boxGeo(0.042, 0.038, 0.19, 0, -0.018, -0.005),
+    boxGeo(0.03, 0.076, 0.038, 0, -0.072, -0.052, 0.2),
+    boxGeo(0.018, 0.048, 0.01, 0, -0.066, -0.012, -0.14),
+    boxGeo(0.018, 0.01, 0.042, 0, -0.088, -0.032),
+    new THREE.CylinderGeometry(0.018, 0.02, 0.078, 10).translate(0, -0.068, 0.068),
   ]),
-  cam: boxGeo(0.07, 0.06, 0.1),
-  lens: new THREE.CylinderGeometry(0.022, 0.022, 0.012, 10).rotateX(Math.PI / 2).translate(0, 0, 0.055),
+  silver: mergeGeometries([
+    new THREE.CylinderGeometry(0.022, 0.025, 0.032, 10).rotateX(Math.PI / 2).translate(0, 0, -0.148),
+    boxGeo(0.008, 0.034, 0.012, 0, -0.064, -0.028, 0.1),
+    new THREE.CylinderGeometry(0.019, 0.021, 0.046, 10).translate(0, 0.036, 0.01),
+    boxGeo(0.032, 0.022, 0.044, 0, -0.108, -0.068),
+    new THREE.CylinderGeometry(0.005, 0.005, 0.138, 6)
+      .rotateX(Math.PI / 2 - 0.28)
+      .translate(0, -0.092, 0.002),
+    new THREE.CylinderGeometry(0.015, 0.017, 0.32, 10).rotateX(Math.PI / 2).translate(0, 0, 0.5),
+    new THREE.CylinderGeometry(0.019, 0.016, 0.04, 10).rotateX(Math.PI / 2).translate(0, 0, 0.64),
+  ]),
+  accents: mergeGeometries([
+    new THREE.CylinderGeometry(0.022, 0.022, 0.016, 10).translate(0, -0.042, 0.068),
+    new THREE.CylinderGeometry(0.024, 0.024, 0.014, 10).translate(0, 0.042, 0.01),
+    new THREE.CylinderGeometry(0.018, 0.018, 0.032, 10).rotateX(Math.PI / 2).translate(0, -0.038, -0.12),
+  ]),
+  barrelBack: new THREE.CylinderGeometry(0.019, 0.023, 0.225, 10).rotateX(Math.PI / 2).translate(0, 0, 0.227),
+  tank: mergeGeometries([
+    new THREE.CylinderGeometry(0.034, 0.034, 0.13, 12).rotateX(Math.PI / 2).translate(0, -0.038, -0.2),
+    new THREE.SphereGeometry(0.034, 12, 8).translate(0, -0.038, -0.265),
+    new THREE.SphereGeometry(0.034, 12, 8).scale(1, 1, 0.65).translate(0, -0.038, -0.135),
+  ]),
+  cam: boxGeo(0.036, 0.034, 0.068),
+  lens: new THREE.CylinderGeometry(0.014, 0.014, 0.01, 10).rotateX(Math.PI / 2).translate(0, 0, 0.038),
 };
 const TURRET_LENS = new THREE.MeshStandardMaterial({
   color: 0x0d1a24,
@@ -94,48 +145,49 @@ const TURRET_LENS = new THREE.MeshStandardMaterial({
   roughness: 0.05,
 }); // a red REC light in the glass
 const HOPPER_GEO = {
-  shell: new THREE.CylinderGeometry(0.085, 0.07, 0.17, 14).translate(0, 0.085, 0),
-  balls: new THREE.CylinderGeometry(0.075, 0.062, 0.12, 14).translate(0, 0.062, 0),
-  lid: new THREE.CylinderGeometry(0.09, 0.09, 0.025, 14).translate(0, 0.18, 0),
-  feed: new THREE.CylinderGeometry(0.025, 0.025, 0.08, 8),
+  shell: new THREE.SphereGeometry(0.068, 14, 10).scale(0.76, 0.66, 1.38).translate(0, 0.048, -0.015),
+  balls: new THREE.SphereGeometry(0.056, 12, 8).scale(0.74, 0.56, 1.3).translate(0, 0.038, -0.015),
+  lid: new THREE.CylinderGeometry(0.036, 0.04, 0.012, 12).translate(0, 0.09, -0.02),
 };
 const HOPPER_SHELL = new THREE.MeshStandardMaterial({
-  color: 0xe8eef2,
+  color: 0xeef5f9,
   transparent: true,
-  opacity: 0.45,
-  roughness: 0.1,
+  opacity: 0.48,
+  roughness: 0.12,
   depthWrite: false,
 });
-// Small remote paintball turret with a hopper of balls on top.
-// Pivot heights: yaw +0.07, pitch +0.17, muzzle 0.66 along the barrel.
-function buildSmallTurret(ballMat: THREE.MeshStandardMaterial) {
+// Modded remote paintball marker on a slim gimbal mount with a low-profile loader hopper.
+// Pivot heights: yaw +0.036, pitch +0.17, muzzle 0.66 along the barrel.
+function buildSmallTurret(ballMat: THREE.MeshStandardMaterial, trimMat: THREE.MeshStandardMaterial) {
   const base = new THREE.Group();
-  const ring = new THREE.Mesh(TURRET_GEO.ring, SHARED.darkMetal);
+  const puck = new THREE.Mesh(TURRET_GEO.puck, MARKER_SILVER);
+  const collar = new THREE.Mesh(TURRET_GEO.collar, MARKER_GOLD);
   const yaw = new THREE.Group();
-  yaw.position.y = 0.07;
-  const housing = new THREE.Mesh(TURRET_GEO.housing, SHARED.gunMetal);
+  yaw.position.y = 0.036;
+  const yoke = new THREE.Mesh(TURRET_GEO.yoke, MARKER_SILVER);
   const pitch = new THREE.Group();
-  pitch.position.set(0, 0.1, 0.06);
-  const barrel = new THREE.Mesh(TURRET_GEO.barrel, SHARED.darkMetal);
-  pitch.add(barrel);
+  pitch.position.set(0, 0.134, 0);
+  const body = new THREE.Mesh(TURRET_GEO.body, MARKER_ANODIZED);
+  const silver = new THREE.Mesh(TURRET_GEO.silver, MARKER_SILVER);
+  const accents = new THREE.Mesh(TURRET_GEO.accents, MARKER_GOLD);
+  const barrelBack = new THREE.Mesh(TURRET_GEO.barrelBack, trimMat);
+  const tank = new THREE.Mesh(TURRET_GEO.tank, MARKER_TANK);
   const hopper = new THREE.Group();
-  hopper.position.set(0, 0.21, -0.08);
-  const feed = new THREE.Mesh(HOPPER_GEO.feed, SHARED.darkMetal);
-  feed.position.y = -0.03;
+  hopper.position.set(0, 0.055, 0.01);
   hopper.add(
     new THREE.Mesh(HOPPER_GEO.balls, ballMat),
     new THREE.Mesh(HOPPER_GEO.shell, HOPPER_SHELL),
-    new THREE.Mesh(HOPPER_GEO.lid, SHARED.darkMetal),
-    feed,
+    new THREE.Mesh(HOPPER_GEO.lid, trimMat),
   );
-  // the camera the gunner watches through their goggles, on top of the housing
-  const cam = new THREE.Mesh(TURRET_GEO.cam, SHARED.darkMetal),
+  // the camera the gunner watches through their goggles, clipped to the marker's side rail
+  const cam = new THREE.Mesh(TURRET_GEO.cam, MARKER_SILVER),
     lens = new THREE.Mesh(TURRET_GEO.lens, TURRET_LENS);
-  cam.position.set(0.1, 0.19, 0.02);
-  lens.position.set(0.1, 0.19, 0.02);
-  yaw.add(housing, pitch, hopper, cam, lens);
-  base.add(ring, yaw);
-  for (const m of [ring, housing, barrel]) m.castShadow = true;
+  cam.position.set(0.042, 0.01, 0.02);
+  lens.position.set(0.042, 0.01, 0.02);
+  pitch.add(body, silver, accents, barrelBack, tank, hopper, cam, lens);
+  yaw.add(yoke, pitch);
+  base.add(puck, collar, yaw);
+  for (const m of [puck, yoke, body, silver, barrelBack, tank]) m.castShadow = true;
   return { base, yaw, pitch };
 }
 
@@ -390,7 +442,7 @@ export function createCar(idx: number, cfg: CarSetup): Car {
   // Reinforced chassis mounts keep marker aim steady while the surrounding lids flap.
   car.turrets = {};
   for (const key of ['hood', 'trunk'] as const) {
-    const rig = buildSmallTurret(car.ballMat);
+    const rig = buildSmallTurret(car.ballMat, car.trimMat);
     const mount = TURRETS[key].pos;
     rig.base.position.set(mount[0], mount[1], mount[2]);
     body.add(rig.base);
@@ -637,7 +689,7 @@ function setLayer(obj: THREE.Object3D, layer: number) {
 
 export function refreshOccupantVisuals(car: Car) {
   for (let s = 0; s < 4; s++) {
-    const occ = car.occ[s];
+    const occ = s === 0 ? car.occ[0] : null;
     let r = car.riders[s];
     if (!occ || !car.alive) {
       if (r) {

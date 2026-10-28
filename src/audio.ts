@@ -40,7 +40,7 @@ export function createSoundEffects(
   const rand = (a: number, b: number): number => a + random() * (b - a);
   let runtime: AudioRuntime | null = null;
   let volume = 0.55;
-  const marker = createAudioSample('assets/audio/paintball-shot-fabianofa.mp3', loadSample);
+  const marker = createAudioSample('assets/audio/paintball-marker-dry-fabianofa.wav', loadSample);
   const listeners: Vector3[] = []; // world positions of local players' cameras
   function init() {
     if (runtime) {
@@ -334,7 +334,7 @@ export function createSoundEffects(
     stopEngines,
     // A recorded paintball marker, with a pneumatic fallback while it loads or if audio decoding fails.
     gun: (pos: Position | null) => {
-      if (!marker.play(0.5 * gainAt(pos), rand(0.96, 1.04)))
+      if (!marker.play(0.7 * gainAt(pos), rand(0.96, 1.04)))
         noise(0.065, { freq: 1900, q: 0.8, type: 'bandpass', vol: 0.22, pos });
     },
     // wet splat; strength > 1 for paint bombs

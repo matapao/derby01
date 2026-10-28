@@ -24,6 +24,7 @@ export interface ControlFrame {
   fire: boolean;
   zoom: boolean;
   switchP: boolean;
+  seatTo?: 1 | 2 | 3 | null;
   camP: boolean;
   x: number;
   y: number;

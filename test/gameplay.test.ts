@@ -79,7 +79,7 @@ test('radar credit uses a recent enemy hit and expires at the credit window', ()
   assert.equal(state.points[1], 150);
   assert.deepEqual(
     events.map((event) => event.kind),
-    ['award', 'radar', 'headshot'],
+    ['award', 'radar', 'radarMark'],
   );
   scoring.scoreRadar(victim, victim);
   scoring.scoreRadar(victim, car());

@@ -1,4 +1,5 @@
 import { requireValue } from './required-fields.ts';
+import { gameSoundtrack } from './game-soundtrack.ts';
 import { requiredElement, dataValue, setHtml } from './browser-dom.ts';
 import { beginCompetition, updateCompetition, finishCompetition, resetCompetition } from './competition.ts';
 import { deviceInfo } from './gameplay/devices.ts';
@@ -140,9 +141,9 @@ const SETUP_KEY = 'derby01.setup.v1';
 const B = 'bot';
 const MIN_CARS = 2,
   MAX_CARS = TEAMS.length; // one car per team colour
-// seats: [driver, hood gunner, trunk gunner, mechanic]. Every seat is a bot or a player.
+// seats: [driver, hood gunner, trunk gunner, mechanic]. One person per car (the driver also controls the turrets).
 const SEAT_NAMES = ['Driver', 'Hood gun', 'Trunk gun', 'Mechanic'];
-const SEAT_ORDER = [0, 3, 1, 2]; // as the setup lists them: the front seats first
+const SEAT_ORDER = [0]; // one person per car on the setup screen
 const newMapSeed = () => 1 + Math.floor(Math.random() * 99999);
 const isMapSeed = (n: unknown): n is number =>
   Number.isInteger(n) && (n as number) >= 1 && (n as number) <= 99999;
@@ -238,29 +239,31 @@ function freeDevices(own = ''): string[] {
       (k !== 'touch' || touchScreen()),
   );
 }
-// A player sits down; whoever sat there takes the seat they left (a bot stays a bot).
-function sit(slot: string, ci: number, si: number) {
+// A player sits down; whoever sat there takes the car they left (a bot stays a bot).
+function sit(slot: string, ci: number, _si = 0) {
   const from = seatOf(slot),
-    there = requireValue(setup.cars[ci]).seats[si];
-  requireValue(setup.cars[ci]).seats[si] = slot;
-  if (from && (from[0] !== ci || from[1] !== si))
-    requireValue(setup.cars[from[0]]).seats[from[1]] = isHumanSlot(there) ? there : B;
+    car = requireValue(setup.cars[ci]),
+    there = requireValue(car.seats[0]);
+  if (from) requireValue(setup.cars[from[0]]).seats[from[1]] = B;
+  car.seats[0] = slot;
+  car.seats[1] = B;
+  car.seats[2] = B;
+  car.seats[3] = B;
+  if (from && from[0] !== ci && isHumanSlot(there) && there !== slot) {
+    requireValue(setup.cars[from[0]]).seats[0] = there;
+  }
 }
-// To another car: the same seat there unless a player has it, else a seat no player has, else swap seats with that player.
+// To another car: take its seat, or swap cars with whoever sits there.
 function toCar(slot: string, ci: number) {
-  const from = seatOf(slot),
-    role = from ? from[1] : 0,
-    seats = requireValue(setup.cars[ci]).seats;
-  if (!from || from[0] !== ci)
-    sit(slot, ci, [role, ...SEAT_ORDER].find((s) => !isHumanSlot(seats[s])) ?? role);
+  const from = seatOf(slot);
+  if (!from || from[0] !== ci) sit(slot, ci, 0);
 }
-// A new player drives a car of their own while one has no players; after that they join the car with the fewest.
+// Each car is one person only: a new player takes the first car without a human player.
 function addPlayer(slot: string): boolean {
   if (seatOf(slot)) return true;
-  const car = setup.cars.reduce((best, c) => (humansIn(c) < humansIn(best) ? c : best));
-  const si = SEAT_ORDER.find((s) => !isHumanSlot(car.seats[s]));
-  if (si === undefined) return false; // a player in every seat
-  car.seats[si] = slot;
+  const car = setup.cars.find((c) => humansIn(c) === 0);
+  if (!car) return false; // a player in every car
+  car.seats[0] = slot;
   return true;
 }
 function setCarCount(n: number) {
@@ -298,11 +301,6 @@ function playerCard(slot: string): HTMLElement {
   card.className = 'player';
   card.style.setProperty('--team', requireValue(TEAMS[car.team]).ui);
   const devices = online ? [] : [slot, ...freeDevices(slot).filter((d) => d !== slot)];
-  const seatBtn = (s: number) => {
-    const t = car.seats[s],
-      other = isHumanSlot(t) && t !== slot;
-    return `<button data-seat="${s}" class="${s === si ? 'on' : other ? 'taken' : ''}" aria-pressed="${s === si}"${other ? ` title="${esc(slotName(t))} sits here: you swap"` : ''}>${SEAT_NAMES[s]}</button>`;
-  };
   card.innerHTML = `
     <div class="who">${
       online
@@ -310,17 +308,10 @@ function playerCard(slot: string): HTMLElement {
         : `<select class="dev" aria-label="Plays with">${devices.map((d) => `<option value="${d}"${d === slot ? ' selected' : ''}>${esc(deviceInfo(d)?.label ?? d)}</option>`).join('')}</select>`
     }</div>
     <div class="pick cars-pick" role="group" aria-label="Car">${setup.cars.map((c, i) => `<button class="sw${i === ci ? ' on' : ''}" data-car="${i}" style="--c:${requireValue(TEAMS[c.team]).ui}" aria-pressed="${i === ci}" title="${requireValue(TEAMS[c.team]).name}">${i + 1}</button>`).join('')}</div>
-    <div class="pick seat-pick" role="group" aria-label="Seat">${SEAT_ORDER.map(seatBtn).join('')}</div>
     ${online ? '' : '<button class="x" title="Remove this player" aria-label="Remove this player">×</button>'}`;
   card.querySelectorAll<HTMLButtonElement>('button[data-car]').forEach((b) =>
     b.addEventListener('click', () => {
       toCar(slot, +dataValue(b, 'car'));
-      renderSetup();
-    }),
-  );
-  card.querySelectorAll<HTMLButtonElement>('button[data-seat]').forEach((b) =>
-    b.addEventListener('click', () => {
-      sit(slot, ci, +dataValue(b, 'seat'));
       renderSetup();
     }),
   );
@@ -401,7 +392,7 @@ export function renderSetup() {
   $('#mapName').textContent = fixed ? D.town.id : '#' + setup.mapSeed;
   requiredElement('#newMap', HTMLButtonElement).disabled = fixed;
   // summary
-  const bots = setup.cars.length * 4 - who.length;
+  const bots = setup.cars.length - who.length;
   const notes = who
     .filter((d) => d.startsWith('pad') && deviceInfo(d) && !Input.pads[+requireValue(d[3])])
     .map((d) => `${deviceInfo(d)?.label}: press a button on it`);
@@ -443,6 +434,8 @@ function bindMenu() {
   });
   $('#startBtn').addEventListener('click', () => {
     SFX.init();
+    soundtrackStarted = true;
+    void gameSoundtrack.start().catch(reportSoundtrackFailure);
     startGame();
   });
   $('#resumeBtn').addEventListener('click', () => {
@@ -451,6 +444,7 @@ function bindMenu() {
   });
   $('#restartBtn').addEventListener('click', () => {
     $('#pause').classList.add('hidden');
+    resumeSoundtrack();
     startRound();
   });
   $('#setupBtn').addEventListener('click', () => toMenu());
@@ -672,6 +666,13 @@ export function standings() {
 }
 
 // note: why it paused, on the pause screen (a gamepad that came loose, say)
+let soundtrackStarted = false;
+function reportSoundtrackFailure(error: unknown): void {
+  console.warn('Game soundtrack unavailable', error);
+}
+function resumeSoundtrack(): void {
+  if (soundtrackStarted) void gameSoundtrack.resume().catch(reportSoundtrackFailure);
+}
 export function pauseGame(on: boolean, note = '') {
   if (on && note) $('#pauseNote').textContent = note;
   if (!on) $('#pauseNote').textContent = '';
@@ -679,6 +680,8 @@ export function pauseGame(on: boolean, note = '') {
     // online the game goes on for everyone else: this only opens the menu (and leaves the controls alone)
     if (on && !['playing', 'countdown', 'over'].includes(G.state)) return;
     G.menuOpen = on;
+    if (on) void gameSoundtrack.pause().catch(reportSoundtrackFailure);
+    else resumeSoundtrack();
     $('#pause').classList.toggle('hidden', !on);
     if (on && document.pointerLockElement) document.exitPointerLock();
     return;
@@ -687,16 +690,20 @@ export function pauseGame(on: boolean, note = '') {
     if (!['playing', 'countdown', 'over'].includes(G.state)) return;
     G.prevState = G.state;
     G.state = 'paused';
+    void gameSoundtrack.pause().catch(reportSoundtrackFailure);
     $('#pause').classList.remove('hidden');
     if (document.pointerLockElement) document.exitPointerLock();
     SFX.stopEngines();
   } else if (G.state === 'paused') {
+    resumeSoundtrack();
     G.state = G.prevState || 'playing';
     $('#pause').classList.add('hidden');
   }
 }
 
 export function toMenu() {
+  soundtrackStarted = false;
+  void gameSoundtrack.stop().catch(reportSoundtrackFailure);
   clearArena();
   G.state = 'menu';
   G.menuOpen = false;
@@ -847,9 +854,13 @@ function tick(dt: number, draw = true) {
     for (const h of G.humans) updateHumanControls(h, dt);
     for (const h of G.remotes) driveRemote(h, dt);
     for (const car of G.cars) {
+      const humanInCar = car.occ.some((o) => o?.kind === 'human');
       for (let s = 0; s < 4; s++) {
         const o = car.occ[s];
-        if (o && o.kind === 'bot' && o.bot) (s === 0 ? botDrive : s === 3 ? botMechanic : botGun)(o.bot, dt);
+        if (o && o.kind === 'bot' && o.bot) {
+          if ((s === 1 || s === 2) && humanInCar) continue;
+          (s === 0 ? botDrive : s === 3 ? botMechanic : botGun)(o.bot, dt);
+        }
       }
       updateSystems(car, dt, (target, amount) => damageCar(target, amount, null, 'fire'));
       if (G.state === 'countdown') Object.assign(car.ctrl, { throttle: 0, handbrake: true, boost: false });
@@ -943,6 +954,7 @@ export const checkHiddenClock = (): void => keepRunningHidden(document.hidden &&
 document.addEventListener('visibilitychange', () => {
   checkHiddenClock();
   if (!document.hidden) return;
+  void gameSoundtrack.pause().catch(reportSoundtrackFailure);
   SFX.stopEngines();
   if (!getSession()) pauseGame(true);
 });

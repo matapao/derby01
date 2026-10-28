@@ -1,6 +1,6 @@
 {
   "status": "Installed and used by SFX.gun",
-  "file": "paintball-shot-fabianofa.mp3",
+  "file": "paintball-marker-dry-fabianofa.wav",
   "title": "paintball_shoot1.wav",
   "creator": "fabianofa",
   "source": "https://freesound.org/people/fabianofa/sounds/98189/",
@@ -8,7 +8,9 @@
   "licence": "CC0 1.0 Universal",
   "licenceUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
   "retrieved": "2026-10-24",
-  "sha256": "7f60036a6406ebc832cfd155579edb2c8194046baa6d175a7b755f60c8a7d4bc",
-  "modifications": "Freesound high-quality MP3 preview of the original WAV; no edits to the recording. In-game playback varies gain by distance and pitch slightly per shot.",
-  "description": "A single real paintball marker shot with a short reverb tail."
+  "sha256": "d0a09bd5837741f4a62171ef97c591ed5052624e030bee308af9d0764026d3b8",
+  "modifications": "First 55 ms of the original recording; 0.5 ms onset fade and 15 ms end fade; original pitch and peak level retained. In-game playback varies gain by distance and pitch slightly per shot.",
+  "description": "Dry paintball-marker pop, with the extended echo removed.",
+  "sourceFile": "paintball-shot-fabianofa.mp3",
+  "sourceSha256": "7f60036a6406ebc832cfd155579edb2c8194046baa6d175a7b755f60c8a7d4bc"
 }

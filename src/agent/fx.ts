@@ -25,7 +25,7 @@ export type Effect =
   | { fx: 'breakProp'; index: number; car: number | null }
   | { fx: 'placeDrop'; id: number; type: (typeof DROPS)[number]; x: number; z: number }
   | { fx: 'takeDrop'; id: number }
-  | { fx: 'headshotMark'; by: number }
+  | { fx: 'radarMark'; by: number }
   | { fx: 'burnEnd'; car: number; kept: boolean }
   | { fx: 'radarHit'; car: number };
 
@@ -182,7 +182,7 @@ const READ: Record<number, (r: Reader) => Effect | undefined> = {
     return type ? { fx: 'placeDrop', id, type, x, z } : undefined;
   },
   21: (r) => ({ fx: 'takeDrop', id: r.u32() }),
-  22: (r) => ({ fx: 'headshotMark', by: r.u8() }),
+  22: (r) => ({ fx: 'radarMark', by: r.u8() }),
   23: (r) => {
     const c = r.u8();
     return { fx: 'burnEnd', car: c, kept: r.u8() === 1 };

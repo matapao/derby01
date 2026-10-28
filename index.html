@@ -1763,7 +1763,7 @@
     <nav class="utility-dock" aria-label="Game tools">
       <button type="button" class="btn small" id="helpBtn">How to play</button
       ><button type="button" class="btn small" id="statsBtn">Standings</button
-      ><button type="button" class="btn small" id="soundBtn">Sound & picture</button>
+      ><button type="button" class="btn small" id="soundBtn">Picture</button>
     </nav>
     <div id="loading" class="screen" role="status">
       Loading cars…
@@ -1781,8 +1781,9 @@
         <div class="brand">
           <h1>DERBY<br />01</h1>
           <p>
-            Paintball demolition derby. Every car has a driver, a mechanic up front and two gunners in the
-            back on the hood and trunk turrets. Bots take every seat no player picks.
+            Paintball demolition derby. One player per car: sit inside, drive with WASD, aim with the mouse,
+            left-click to fire the front paintball marker, and hold right-click to look back through the rear
+            window and fire at pursuers.
           </p>
         </div>
         <section class="cover-credits" aria-labelledby="coverCreditsTitle">
@@ -1848,10 +1849,25 @@
               target="_blank"
               rel="noopener noreferrer"
               >CC0 1.0</a
-            >. Unmodified HQ MP3 preview; distance gain and slight pitch variation during play.
+            >. Dry edit: echo tail removed with a short fade; distance gain and slight pitch variation during
+            play.
           </p>
           <p id="musicCredits" data-music-credits>
-            Random CC0 music starts after your first click. Track credits appear here during play.
+            Music:
+            <a
+              href="https://pixabay.com/music/rock-action-rock-instrumental-614585/"
+              target="_blank"
+              rel="noopener noreferrer"
+              >Action Rock Instrumental</a
+            >
+            by
+            <a href="https://pixabay.com/users/sub_clair-55456531/" target="_blank" rel="noopener noreferrer"
+              >Sub_Clair</a
+            >
+            ·
+            <a href="https://pixabay.com/service/license-summary/" target="_blank" rel="noopener noreferrer"
+              >Pixabay Content License</a
+            >. Starts with Start. Use your device volume.
           </p>
         </section>
         <section class="panel" aria-labelledby="playersTitle">
@@ -1887,7 +1903,7 @@
           >
         </div>
         <div class="points-info">
-          <b>Points</b> · damage you do · wreck a car +250 · <b>the radar is the headshot</b>: +5 a hit,
+          <b>Points</b> · damage you do · wreck a car +250 · <b>roof radar</b>: +5 a hit,
           <b>+150 for knocking it off</b> · <b>burns</b>: throw it into a drift or a donut (handbrake, or full
           lock on full throttle) and hold it, the longer the more (crash first and it's lost) · last car
           standing +200
@@ -1913,14 +1929,17 @@
                 <kbd>Shift</kbd> nitro · <kbd>V</kbd> cockpit / chase cam
               </td>
               <td>
-                Mouse aim · <kbd>Click</kbd> fire · <kbd>Right click</kbd> zoom · jammed: <kbd>W</kbd
-                ><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>
+                Mouse aim from inside · <kbd>Left click</kbd> fire front marker · Hold
+                <kbd>Right click</kbd> look back &amp; fire rear marker
               </td>
               <td>
                 <kbd>W</kbd>/<kbd>S</kbd> pick a job · <kbd>Space</kbd> start · <kbd>Shift</kbd> drop it ·
                 jobs use <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> + <kbd>Space</kbd>
               </td>
-              <td><kbd>C</kbd> change seat · <kbd>Esc</kbd> pause</td>
+              <td>
+                <kbd>1</kbd> front turret · <kbd>2</kbd> in car · <kbd>3</kbd> back turret ·
+                <kbd>C</kbd> change seat · <kbd>Esc</kbd> pause
+              </td>
             </tr>
             <tr>
               <th scope="row">Keys: WASD</th>
@@ -1930,14 +1949,14 @@
               </td>
               <td><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> aim · <kbd>Space</kbd> fire</td>
               <td><kbd>W</kbd>/<kbd>S</kbd> pick · <kbd>Space</kbd> start · <kbd>Shift</kbd> drop it</td>
-              <td><kbd>C</kbd> change seat</td>
+              <td><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> or <kbd>C</kbd> change seat</td>
             </tr>
             <tr>
               <th scope="row">Keys: Arrows</th>
               <td>Arrows · <kbd>Enter</kbd> handbrake · <kbd>R-Shift</kbd> nitro · <kbd>,</kbd> camera</td>
               <td>Arrows aim · <kbd>Enter</kbd> fire</td>
               <td><kbd>↑</kbd>/<kbd>↓</kbd> pick · <kbd>Enter</kbd> start · <kbd>R-Shift</kbd> drop it</td>
-              <td><kbd>.</kbd> change seat</td>
+              <td><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> or <kbd>.</kbd> change seat</td>
             </tr>
             <tr>
               <th scope="row">Mouse only</th>
@@ -1978,10 +1997,10 @@
           </table>
           <div class="about">
             <p>
-              The driver sits front left and the mechanic front right, with two screens on the dash: one for
-              the car, one for the jobs. The two in the back are the gunners: they wear camera goggles and
-              work the remote turrets on the hood and the trunk lid, watching the feed from the camera on each
-              turret. Changing seat swaps you with a bot.
+              Each car holds at most two players: the driver sits front left, and the other handles the
+              turrets and engine — working the remote paintball markers on the hood (<kbd>1</kbd>) and the
+              trunk lid (<kbd>3</kbd>) or jumping inside the car (<kbd>2</kbd>) to fix the engine and systems
+              on the dash screens, in addition to cycling with <kbd>C</kbd>.
             </p>
             <p>
               Every car is built its own way (stock, rally, drift, sport or muscle: pick it next to the car's
@@ -2003,7 +2022,7 @@
             </p>
             <p>
               A radar spins on every roof and drives the radar screen in the corner. Shoot an enemy's radar
-              off and their screen goes dark until their mechanic fixes it: that's the headshot.
+              off and their screen goes dark until their mechanic fixes it.
             </p>
           </div>
           <div class="pads" id="padInfo"></div>

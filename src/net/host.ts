@@ -121,10 +121,9 @@ export function hostPeerJoined(id: number): void {
   sendCrew();
 }
 
-/** The first seat that passes free(): a driver's if there is one. */
+/** The first car whose driver seat passes free(). Each car is one person only. */
 function firstSeat(cars: number, free: (ci: number, si: number) => boolean): [number, number] | null {
   for (let ci = 0; ci < cars; ci++) if (free(ci, 0)) return [ci, 0];
-  for (let ci = 0; ci < cars; ci++) for (let si = 1; si < 4; si++) if (free(ci, si)) return [ci, si];
   return null;
 }
 
@@ -194,6 +193,25 @@ export function driveRemote(h: Human, dt: number): void {
         boost: c.boost,
       });
     else Object.assign(car.ctrl, { throttle: 0, steer: c ? c.steer : 0, handbrake: true, boost: false });
+    const gunSeat = c?.zoom ? 2 : 1,
+      otherSeat = c?.zoom ? 1 : 2;
+    gunAt(car, otherSeat).firing = false;
+    gunAt(car, otherSeat).zoom = 0;
+    const g = gunAt(car, gunSeat);
+    if (c) {
+      g.yaw = c.aimYaw;
+      g.pitch = c.aimPitch;
+      clampGunToArc(car, gunSeat);
+      aimDir(g.yaw, g.pitch, _gunDir);
+      gunMuzzle(car, gunSeat, _muzzle);
+      _toAim.set(c.aimX, c.aimY, c.aimZ).sub(_muzzle);
+      const len = _toAim.length();
+      if (len > 2 && _toAim.dot(_gunDir) > len * AIM_CONE) g.aimPoint.set(c.aimX, c.aimY, c.aimZ);
+      else g.aimPoint.copy(_muzzle).addScaledVector(_gunDir, Math.max(len, 20));
+    }
+    g.firing = G.state === 'playing' && !!c && c.fire && !g.jam;
+    if (g.jam) h.jamSince ??= performance.now();
+    else delete h.jamSince;
   } else if (isGunSeat(h.seat)) {
     const g = gunAt(car, h.seat);
     if (c) {
@@ -253,6 +271,8 @@ export function hostAsk(from: number, r: ZN.Reader): void {
   if (!h || !h.car || !h.car.alive || !RUNNING.has(G.state)) return;
   const car = h.car;
   if (a['a'] === 'switch') {
+    const to = a['to'] === 1 || a['to'] === 2 || a['to'] === 3 ? a['to'] : undefined;
+    if (to !== undefined && (h.seat === 0 || h.seat === to)) return;
     if (now - (h.switchAt ?? -1e9) < SWITCH_MS) return;
     h.switchAt = now;
     // leaving a pour half-done still uses the can up, as it does on the host's own screen
@@ -260,7 +280,7 @@ export function hostAsk(from: number, r: ZN.Reader): void {
       car.stock.fuel--;
       h.poured = 0;
     }
-    switchSeat(h); // tells everyone
+    switchSeat(h, to); // tells everyone
   } else if (a['a'] === 'fix' && h.seat === 3 && typeof a['task'] === 'string') {
     if (now - (h.fixAt ?? -1e9) < JOB_MS) return; // nobody finishes a job faster than that
     // the job must still be there, and doable: the mechanic's screen worked it out from the same state.
@@ -294,8 +314,9 @@ export function hostAsk(from: number, r: ZN.Reader): void {
       car.sys.fuel = Math.min(car.sys.fuel, 90);
       if (Math.random() < 0.15) startFire(car, 1);
     }
-  } else if (a['a'] === 'unjam' && isGunSeat(h.seat)) {
-    const g = gunAt(car, h.seat);
+  } else if (a['a'] === 'unjam' && (h.seat === 0 || isGunSeat(h.seat))) {
+    const gunSeat = h.seat === 0 ? (h.frame?.zoom ? 2 : 1) : h.seat;
+    const g = gunAt(car, gunSeat);
     if (g.jam && h.jamSince !== undefined && now - h.jamSince >= UNJAM_MS) {
       g.jam = false;
       g.overheat = false;
@@ -528,6 +549,7 @@ function takeOverSetup(pub: Record<string, unknown>): Setup | null {
         team: ci,
         kit,
         seats: [0, 1, 2, 3].map((si) => {
+          if (si > 0) return 'bot';
           const t = asSeatTaker(seats[si]);
           if (t === 'bot' || t === 'empty') return 'bot';
           return t.p === me ? (mine.get(t.i) ?? localDevice()) : PEER_SLOT + t.p;

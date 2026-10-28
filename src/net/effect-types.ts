@@ -20,7 +20,7 @@ import type {
   feedRadarFx,
   feedBurnFx,
   noteFx,
-  headshotMarkFx,
+  radarMarkFx,
   burnEndFx,
   radarHitFx,
 } from '../sharedfx.ts';
@@ -45,7 +45,7 @@ export interface EffectArguments {
   16: Parameters<typeof feedRadarFx>;
   17: Parameters<typeof feedBurnFx>;
   18: Parameters<typeof noteFx>;
-  22: Parameters<typeof headshotMarkFx>;
+  22: Parameters<typeof radarMarkFx>;
   23: Parameters<typeof burnEndFx>;
   24: Parameters<typeof radarHitFx>;
   19: Parameters<typeof knockOver>;

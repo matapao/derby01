@@ -25,11 +25,11 @@ import {
   crashFx,
   feedBurnFx,
   feedRadarFx,
-  headshotMarkFx,
   hitMarkFx,
   knockFx,
   noteFx,
   radarHitFx,
+  radarMarkFx,
   shotFx,
   wreckFx,
   NOTES,
@@ -372,7 +372,7 @@ defineEffect(FX.note, noteFx, {
     return c !== undefined && note < NOTES.length ? [c, note] : null;
   },
 });
-defineEffect(FX.headshotMark, headshotMarkFx, {
+defineEffect(FX.radarMark, radarMarkFx, {
   write(w, [by]) {
     wCar(w, by);
   },

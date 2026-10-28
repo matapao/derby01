@@ -7,7 +7,7 @@ import { localDevice } from '../local-device.ts';
 import { ask, sendPour } from './commands.ts';
 import { participantState, resetSeatState } from '../gameplay/participants.ts';
 import type * as ZN from '/zirbel-net.js';
-import { GUN_SEATS, MAX_HP, TEAMS, clamp, damp, setPaintDamage } from '../core.ts';
+import { GUN_SEATS, MAX_HP, TEAMS, TURRETS, clamp, damp, setPaintDamage, wrapPi } from '../core.ts';
 import { createCar, refreshOccupantVisuals, syncCarVisual, updatePlayerTag } from '../car.ts';
 import { G } from '../state.ts';
 import { resetBreakables, setDown, updateBreakables } from '../breakables.ts';
@@ -474,7 +474,10 @@ function applySnapshots(): void {
       const g = gunAt(car, seat),
         ga = ca.guns[seat - 1]!,
         gb = cb.guns[seat - 1]!;
-      const mine = G.humans.some((h: Human) => h.car === car && h.seat === seat && h.aim);
+      const mine = G.humans.some(
+        (h: Human) =>
+          h.car === car && ((h.seat === seat && h.aim) || (h.seat === 0 && (h.lookBack ? 2 : 1) === seat)),
+      );
       if (!mine) {
         g.yaw = lerpA(ga.yaw, gb.yaw, t);
         g.pitch = mix(ga.pitch, gb.pitch, t);
@@ -501,6 +504,10 @@ function playerControls(h: Human, dt: number): Controls {
     return NO_CONTROLS;
   }
   const car = h.car;
+  if (h.seat !== 0 && ctl.seatTo && ctl.seatTo !== h.seat) {
+    ask(h, { a: 'switch', to: ctl.seatTo });
+    return NO_CONTROLS;
+  }
   if (ctl.switchP) {
     ask(h, { a: 'switch' });
     return NO_CONTROLS;
@@ -514,6 +521,34 @@ function playerControls(h: Human, dt: number): Controls {
   };
   if (h.seat === 0) {
     if (ctl.camP) h.camMode = h.camMode === 'chase' ? 'cockpit' : 'chase';
+    const lookBack = !h.device.startsWith('pad') && ctl.zoom;
+    h.lookBack = lookBack;
+    const gunSeat = lookBack ? 2 : 1;
+    const g = gunAt(car, gunSeat);
+    if (lookBack) h.relYawB = clamp((h.relYawB ?? 0) + ctl.dYaw, -TURRETS.trunk.arc, TURRETS.trunk.arc);
+    else h.relYawF = clamp((h.relYawF ?? 0) + ctl.dYaw, -TURRETS.hood.arc, TURRETS.hood.arc);
+    gunAt(car, 1).yaw = wrapPi(car.yaw + TURRETS.hood.center + (h.relYawF ?? 0));
+    gunAt(car, 2).yaw = wrapPi(car.yaw + TURRETS.trunk.center + (h.relYawB ?? 0));
+    g.pitch += ctl.dPitch;
+    clampGunToArc(car, 1);
+    clampGunToArc(car, 2);
+    if (g.jam) {
+      const J = (h.jamGame ||= GAMES.unjam.init());
+      if (GAMES.unjam.update(J, ctl, dt)) {
+        h.jamGame = null;
+        ask(h, { a: 'unjam' });
+        SFX.ok();
+      }
+    } else h.jamGame = null;
+    Object.assign(frame, {
+      fire: ctl.fire && !g.jam,
+      zoom: lookBack,
+      aimYaw: g.yaw,
+      aimPitch: g.pitch,
+      aimX: g.aimPoint.x,
+      aimY: g.aimPoint.y,
+      aimZ: g.aimPoint.z,
+    });
   } else if (h.seat === 3) {
     updateHumanMechanic(h, ctl, dt); // the jobs are played here; a finished one goes to the host
     car.pouring = h.mech?.game?.type === 'pour';
@@ -633,7 +668,7 @@ function setWaiting(text: string): void {
   if (p) p.textContent = text;
 }
 
-const ROLES = ['Driver', 'Hood gun', 'Trunk gun', 'Mechanic'];
+const ROLES = ['Driver'];
 
 /** The host's setup, read only: who sits where. This screen's own seats are marked "you". */
 function showWaiting(): void {
@@ -657,8 +692,8 @@ function showWaiting(): void {
     name.textContent = `${ci + 1} · ${team.name}`;
     row.append(name);
     const seats = Array.isArray(c['seats']) ? c['seats'] : [];
-    ROLES.forEach((role, si) => {
-      const t = asSeatTaker(seats[si]);
+    ROLES.forEach((role, ri) => {
+      const t = asSeatTaker(seats[ri]);
       const span = document.createElement('span');
       const you = t !== 'bot' && t !== 'empty' && t.p === me;
       span.textContent = `${role}: ${t === 'bot' ? 'CPU' : t === 'empty' ? '–' : you ? 'you' : nameOf(t.p, t.i).name}`;

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "points.schema.json",
   "title": "derby01: points",
-  "description": "What scores. Every car scores for its team over the whole match: damage to other cars, wrecks, the radar headshot, burns (holding a tyre-smoking slide), and the last car standing. Speed cameras pay too (their piece in pieces.json). No single award may be over 5000: the screens send awards up to 5000.",
+  "description": "What scores. Every car scores for its team over the whole match: damage to other cars, wrecks, knocking off the roof radar, burns (holding a tyre-smoking slide), and the last car standing. Speed cameras pay too (their piece in pieces.json). No single award may be over 5000: the screens send awards up to 5000.",
   "type": "object",
   "required": ["damage", "wreck", "radarHit", "radar", "win", "burn"],
   "additionalProperties": false,
@@ -29,7 +29,7 @@
       "type": "number",
       "minimum": 0,
       "maximum": 5000,
-      "description": "Knocking an enemy's radar off (shot off, rammed loose or shaken off): the HEADSHOT."
+      "description": "Knocking an enemy's radar off (shot off, rammed loose or shaken off)."
     },
     "win": {
       "type": "number",
