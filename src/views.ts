@@ -33,7 +33,7 @@ import { drawRadarScreen } from './radar.ts';
 import { POINTS, burnPoints } from './score.ts';
 import { _dir, raycast } from './combat.ts';
 import { aimDir, rayBox } from './gameplay/geometry.ts';
-import { carAlerts, drawJam, drawMechanic } from './mechanic.ts';
+import { carAlerts, drawJam } from './mechanic.ts';
 import { syncTouch } from './touch.ts';
 
 // =====================================================================
@@ -143,17 +143,16 @@ export function updateCamera(h: LocalHuman, dt: number) {
     fov += h.boostFov;
     if (h.camMode === 'chase') chaseCamera(cam, car, h, dt);
     else {
-      // Sitting IN the car: looking forward through the windshield, or backwards through the rear window when holding right-click
-      const lookBack = !!h.lookBack;
-      const g = gunAt(car, lookBack ? 2 : 1);
-      const e = lookBack ? [0, 1.18, -0.35] : (requireValue(SEATS[0]).eye ?? requireValue(SEAT_INSIDE[0]));
+      // Sitting IN the car: looking forward through the windshield
+      const g = gunAt(car, 1);
+      const e = [0.14, 1.2, 0.08];
       car.body.updateWorldMatrix(true, false);
       cam.position
         .set(requireValue(e[0]), requireValue(e[1]), requireValue(e[2]))
         .applyMatrix4(car.body.matrixWorld);
-      _e.set(g.pitch + g.recoil * 0.01, wrapPi(g.yaw - car.yaw) + Math.PI, 0);
+      _e.set(g.pitch + g.recoil * 0.01, Math.PI, 0);
       car.body.getWorldQuaternion(cam.quaternion).multiply(_q1.setFromEuler(_e));
-      h.camYaw = g.yaw;
+      h.camYaw = car.yaw;
       fov = 74 + h.boostFov;
     }
   } else if (h.seat === 3) {
@@ -204,7 +203,7 @@ export function updateCamera(h: LocalHuman, dt: number) {
 export function updateAimPoints() {
   for (const h of G.humans) {
     if (h.dead || !h.car.alive || (h.seat !== 0 && !isGunSeat(h.seat))) continue;
-    const gunSeat = h.seat === 0 ? (h.lookBack ? 2 : 1) : h.seat;
+    const gunSeat = h.seat === 0 ? 1 : h.seat;
     const g = gunAt(h.car, gunSeat);
     h.cam.getWorldDirection(_v1);
     const o = h.cam.position;
@@ -217,13 +216,10 @@ export function updateAimPoints() {
 //  HUD (DOM overlay per viewport; the mechanic also gets a canvas)
 // =====================================================================
 const HINTS = {
-  kbm: [
-    'W A S D drive · Mouse aim · Click fire · Hold Right-click look back & fire · Space handbrake · Shift nitro',
-    'Mouse aim · Click fire · Right-click zoom',
-  ],
+  kbm: ['W A S D drive · Mouse aim · Click fire · Space handbrake · Shift nitro', 'Mouse aim · Click fire'],
   wasd: ['W A S D drive · Space handbrake · Shift nitro · V camera', 'W A S D aim · Space fire'],
   arrows: ['Arrows drive · Enter handbrake · R-Shift nitro · , camera', 'Arrows aim · Enter fire'],
-  mouse: ['Move mouse to steer · Left fire · Hold Right-click look back', 'Aim · Left fire'],
+  mouse: ['Move mouse to steer · Left fire', 'Aim · Left fire'],
   pad: [
     'L-stick steer · RT gas & fire · LT brake · R-stick aim · A handbrake · X nitro',
     'R-stick aim · RT fire · LT zoom',
@@ -310,7 +306,7 @@ export function updateHud(dt: number) {
     if (!u) continue;
     const car = h.car;
     const dead = h.dead || !car.alive;
-    const mech = !dead && h.seat === 3;
+    const mech = false;
     if (u.last.team !== car.team) {
       u.last.team = car.team;
       u.el.style.setProperty('--team', requireValue(TEAMS[car.team]).ui);
@@ -336,23 +332,18 @@ export function updateHud(dt: number) {
         `PAN ${rel >= 0 ? '+' : ''}${Math.round(rel * 57.3)}° · TILT ${Math.round(gg.pitch * 57.3)}°${gg.zoom > 0.5 ? ' · ZOOM 2×' : ''}`,
       );
     }
-    const g = isGunSeat(h.seat) ? gunAt(car, h.seat) : h.seat === 0 ? gunAt(car, h.lookBack ? 2 : 1) : null;
-    const jam = !dead && !!g && g.jam;
+    const g = isGunSeat(h.seat) ? gunAt(car, h.seat) : h.seat === 0 ? gunAt(car, 1) : null;
+    const jam = false;
     if (u.last.jam !== jam) {
       u.last.jam = jam;
       u.el.classList.toggle('jam', jam);
       if (!jam) drawJam(h);
     }
-    setText(
-      u,
-      'role',
-      u.role,
-      dead ? 'WRECKED' : h.seat === 0 && h.lookBack ? 'REAR TURRET' : requireValue(SEATS[h.seat]).role,
-    );
+    setText(u, 'role', u.role, dead ? 'WRECKED' : requireValue(SEATS[h.seat]).role);
     setText(u, 'car', u.carname, `CAR #${car.num} · CHASSIS`);
     setText(u, 'hp', u.hpnum, `${Math.ceil(car.hp)}`);
     u.hpbar.style.width = `${car.hp}%`;
-    u.cross.style.display = !dead && g ? '' : 'none';
+    u.cross.style.display = 'none';
     // hit marker + damage flash
     h.hitMark = Math.max(0, h.hitMark - dt * 7);
     u.hit.classList.toggle('on', h.hitMark > 0.2);
@@ -378,9 +369,7 @@ export function updateHud(dt: number) {
           ? 'NITRO!'
           : car.mods.power <= 0
             ? 'NO POWER'
-            : h.lookBack
-              ? 'KM/H · REAR GUN'
-              : 'KM/H · FRONT GUN';
+            : 'KM/H · FRONT GUN';
       meter = car.boostFuel;
     } else if (g) {
       big = g.jam ? 'JAMMED' : g.overheat ? 'HOT!' : h.seat === 1 ? 'HOOD GUN' : 'TRUNK GUN';
@@ -419,7 +408,7 @@ export function updateHud(dt: number) {
     // messages
     let msg = '';
     if (dead && G.state !== 'over')
-      msg = `WRECKED<small>${h.watch && h.watch !== car ? `Watching car #${h.watch.num} · ` : ''}${h.device.startsWith('pad') ? 'Y' : h.device === 'arrows' ? '.' : h.device === 'mouse' ? 'Middle-click' : h.device === 'touch' ? 'Tap VIEW' : 'C'} to switch view</small>`;
+      msg = `WRECKED${h.watch && h.watch !== car ? `<small>Watching car #${h.watch.num}</small>` : ''}`;
     if (u.last.msg !== msg) {
       u.last.msg = msg;
       u.msg.innerHTML = msg;
@@ -434,9 +423,7 @@ export function updateHud(dt: number) {
     setText(u, 'hint', u.hint, dead || mech ? '' : hintFor(h));
     u.hint.style.opacity = h.hintT > 0 ? '1' : '0';
     drawPaintOverlay(h);
-    if (mech) drawMechanic(h);
-    else if (jam) drawJam(h);
-    if (!mech) drawRadarScreen(h);
+    drawRadarScreen(h);
   }
   syncTouch();
 }

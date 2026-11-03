@@ -213,9 +213,9 @@ export function updateGun(car: Car, s: number, dt: number) {
   g.heat = Math.max(0, g.heat - GUN.cool * (g.firing && !g.overheat && !g.jam ? GUN.coolFiring : 1) * dt);
   if (g.overheat && g.heat < GUN.recover) g.overheat = false;
   const muzzle = gunMuzzle(car, s, _muz);
+  g.jam = false;
   g.loft = damp(g.loft || 0, loftAngle(muzzle, g.aimPoint), 12, dt);
-  if (!g.firing || !car.alive || !car.occ[s] || G.state !== 'playing' || g.cd > 0 || g.overheat || g.jam)
-    return;
+  if (!g.firing || !car.alive || !car.occ[s] || G.state !== 'playing' || g.cd > 0 || g.overheat) return;
   g.cd += 1 / GUN.rate;
   // straight at whatever is under the crosshair, then lofted so the arc comes down on it
   const dir = _v3.copy(g.aimPoint).sub(muzzle);

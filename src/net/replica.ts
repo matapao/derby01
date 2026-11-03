@@ -4,7 +4,7 @@ import { receiveRoomMusic } from './music-room.ts';
 import { acceptCompetitionSummary, resetCompetition } from '../competition.ts';
 import { gunAt } from '../gameplay/guns.ts';
 import { localDevice } from '../local-device.ts';
-import { ask, sendPour } from './commands.ts';
+import { sendPour } from './commands.ts';
 import { participantState, resetSeatState } from '../gameplay/participants.ts';
 import type * as ZN from '/zirbel-net.js';
 import { GUN_SEATS, MAX_HP, TEAMS, TURRETS, clamp, damp, setPaintDamage, wrapPi } from '../core.ts';
@@ -17,11 +17,10 @@ import { drawBalls, updatePaint } from '../paint.ts';
 import { updateRadar } from '../radar.ts';
 import { updateDrops } from '../drops.ts';
 import { updateBullets } from '../combat.ts';
-import { clampGunToArc, cycleWatch, defaultGunYaw, readControls } from '../control.ts';
+import { clampGunToArc, defaultGunYaw, readControls } from '../control.ts';
 import { Input } from '../gameplay/input.ts';
 import { placeDrop } from '../drops.ts';
 import {} from '../drop-data.ts';
-import { GAMES, updateHumanMechanic } from '../mechanic.ts';
 import {
   buildHud,
   render,
@@ -500,18 +499,9 @@ function playerControls(h: Human, dt: number): Controls {
   const ctl = readControls(h, dt);
   h.orbit = ctl.orbit;
   if (h.dead || !h.car || !h.car.alive) {
-    if (ctl.switchP) cycleWatch(h);
     return NO_CONTROLS;
   }
   const car = h.car;
-  if (h.seat !== 0 && ctl.seatTo && ctl.seatTo !== h.seat) {
-    ask(h, { a: 'switch', to: ctl.seatTo });
-    return NO_CONTROLS;
-  }
-  if (ctl.switchP) {
-    ask(h, { a: 'switch' });
-    return NO_CONTROLS;
-  }
   const frame: Controls = {
     ...NO_CONTROLS,
     throttle: ctl.throttle,
@@ -525,23 +515,17 @@ function playerControls(h: Human, dt: number): Controls {
     h.lookBack = lookBack;
     const gunSeat = lookBack ? 2 : 1;
     const g = gunAt(car, gunSeat);
-    if (lookBack) h.relYawB = clamp((h.relYawB ?? 0) + ctl.dYaw, -TURRETS.trunk.arc, TURRETS.trunk.arc);
-    else h.relYawF = clamp((h.relYawF ?? 0) + ctl.dYaw, -TURRETS.hood.arc, TURRETS.hood.arc);
-    gunAt(car, 1).yaw = wrapPi(car.yaw + TURRETS.hood.center + (h.relYawF ?? 0));
-    gunAt(car, 2).yaw = wrapPi(car.yaw + TURRETS.trunk.center + (h.relYawB ?? 0));
-    g.pitch += ctl.dPitch;
+    h.relYawF = 0;
+    h.relYawB = 0;
+    gunAt(car, 1).yaw = wrapPi(car.yaw + TURRETS.hood.center);
+    gunAt(car, 2).yaw = wrapPi(car.yaw + TURRETS.trunk.center);
+    g.pitch += ctl.dPitch * 0.3;
     clampGunToArc(car, 1);
     clampGunToArc(car, 2);
-    if (g.jam) {
-      const J = (h.jamGame ||= GAMES.unjam.init());
-      if (GAMES.unjam.update(J, ctl, dt)) {
-        h.jamGame = null;
-        ask(h, { a: 'unjam' });
-        SFX.ok();
-      }
-    } else h.jamGame = null;
+    g.jam = false;
+    h.jamGame = null;
     Object.assign(frame, {
-      fire: ctl.fire && !g.jam,
+      fire: ctl.fire,
       zoom: lookBack,
       aimYaw: g.yaw,
       aimPitch: g.pitch,
@@ -550,8 +534,7 @@ function playerControls(h: Human, dt: number): Controls {
       aimZ: g.aimPoint.z,
     });
   } else if (h.seat === 3) {
-    updateHumanMechanic(h, ctl, dt); // the jobs are played here; a finished one goes to the host
-    car.pouring = h.mech?.game?.type === 'pour';
+    car.pouring = false;
     if ((h.pourT = (h.pourT || 0) - dt) <= 0) {
       h.pourT = 0.2;
       sendPour(h);
@@ -567,16 +550,10 @@ function playerControls(h: Human, dt: number): Controls {
     h.aim.yaw = g.yaw;
     h.aim.pitch = g.pitch;
     g.zoom = clamp(damp(g.zoom, ctl.zoom ? 1 : 0, 14, dt), 0, 1);
-    if (g.jam) {
-      const J = (h.jamGame ||= GAMES.unjam.init());
-      if (GAMES.unjam.update(J, ctl, dt)) {
-        h.jamGame = null;
-        ask(h, { a: 'unjam' });
-        SFX.ok();
-      }
-    } else h.jamGame = null;
+    g.jam = false;
+    h.jamGame = null;
     Object.assign(frame, {
-      fire: ctl.fire && !g.jam,
+      fire: ctl.fire,
       zoom: ctl.zoom,
       aimYaw: g.yaw,
       aimPitch: g.pitch,

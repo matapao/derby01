@@ -1,9 +1,8 @@
 import { requireValue } from './required-fields.ts';
 import { bindInputFocusLoss } from './browser-input-lifecycle.ts';
-import { gunAt, isGunSeat, gunKey } from './gameplay/guns.ts';
+import { gunAt, gunKey } from './gameplay/guns.ts';
 import { usesMouse } from './device-mode.ts';
 import type { Human, LocalHuman } from './human-types.ts';
-import { resetSeatState } from './gameplay/participants.ts';
 import type { BotState, Car, Occupant } from './car-types.ts';
 import {
   Input,
@@ -15,15 +14,12 @@ import {
 import * as THREE from 'three';
 import { GUN, MAX_HP, TURRETS, _v1, clamp, damp, pick, rand, wrapPi } from './core.ts';
 import { NAV, OBSTACLES, arenaNormal, arenaSDF, navStep, renderer, segmentClear } from './world.ts';
-import { refreshOccupantVisuals } from './car.ts';
 import { G } from './state.ts';
 import { SFX } from './audio.ts';
 import { _dir, _muz, gunMuzzle } from './combat.ts';
 import { aimDir } from './gameplay/geometry.ts';
-import { GAMES, dropJob, updateHumanMechanic } from './mechanic.ts';
 import { dropWanted } from './drops.ts';
 import { lifecycle } from './lifecycle.ts';
-import { sendCrew } from './net/crew.ts';
 import { endTouchFrame, nextDevice, notePads, readTouch, useDevice } from './touch.ts';
 import { D, onData } from './data.ts';
 
@@ -203,15 +199,8 @@ export function readControls(h: LocalHuman, dt: number): ControlFrame {
     out.steer = ax;
     out.handbrake = k(K.act);
     out.boost = k(K.alt);
-    out.switchP = kp(K.seat);
-    out.seatTo =
-      kp('Digit1') || kp('Numpad1')
-        ? 1
-        : kp('Digit2') || kp('Numpad2')
-          ? 3
-          : kp('Digit3') || kp('Numpad3')
-            ? 2
-            : null;
+    out.switchP = false;
+    out.seatTo = null;
     out.camP = kp(K.cam);
     out.x = ax;
     out.y = ay;
@@ -326,42 +315,8 @@ export function clampGunToArc(car: Car, s: number) {
   g.pitch = clamp(g.pitch, D.car.turrets[gunKey(s)].pitchMin, D.car.turrets[gunKey(s)].pitchMax);
 }
 
-// Into the next seat a bot has (or a chosen turret/engine view): the bot takes the seat this player left.
-export function switchSeat(h: Human, target?: number) {
-  const car = h.car;
-  if (!car.alive) return;
-  const humanCrew = [1, 2, 3].some((s) => s !== h.seat && car.occ[s]?.kind === 'human');
-  const candidates =
-    target !== undefined
-      ? target >= 1 && target <= 3
-        ? [target]
-        : []
-      : [1, 2, 3].map((k) => (h.seat + k) % 4);
-  for (const s of candidates) {
-    if (s === h.seat) continue;
-    if (car.occ[s]?.kind === 'human') continue;
-    if (s > 0 && humanCrew) continue;
-    if (isGunSeat(h.seat)) {
-      const oldGun = gunAt(car, h.seat);
-      oldGun.firing = false;
-      oldGun.zoom = 0;
-    }
-    dropJob(h); // (a can poured from is used up)
-    car.occ[s] = requireValue(car.occ[h.seat]);
-    car.occ[h.seat] = makeBot(car, h.seat);
-    resetSeatState(h, car, s);
-    if (isGunSeat(s)) {
-      const g = gunAt(car, s);
-      g.yaw = defaultGunYaw(car, s);
-      g.pitch = 0.02;
-    }
-    h.hintT = 6;
-    refreshOccupantVisuals(car);
-    SFX.click();
-    sendCrew();
-    return;
-  }
-}
+// Seat switching is disabled in solo-car mode.
+export function switchSeat(_h: Human, _target?: number) {}
 
 export function updateHumanControls(h: LocalHuman, dt: number) {
   const dev = nextDevice(h); // the last device used wins
@@ -369,18 +324,9 @@ export function updateHumanControls(h: LocalHuman, dt: number) {
   const ctl = readControls(h, dt);
   h.orbit = ctl.orbit;
   if (h.dead || !h.car.alive) {
-    if (ctl.switchP) cycleWatch(h);
     return;
   }
   const car = h.car;
-  if (h.seat !== 0 && ctl.seatTo && ctl.seatTo !== h.seat) {
-    switchSeat(h, ctl.seatTo);
-    return;
-  }
-  if (ctl.switchP) {
-    switchSeat(h);
-    return;
-  }
   if (h.seat === 0) {
     if (G.state === 'playing')
       Object.assign(car.ctrl, {
@@ -391,52 +337,32 @@ export function updateHumanControls(h: LocalHuman, dt: number) {
       });
     else Object.assign(car.ctrl, { throttle: 0, steer: ctl.steer, handbrake: true, boost: false });
     if (ctl.camP) h.camMode = h.camMode === 'chase' ? 'cockpit' : 'chase';
-    const lookBack = !h.device.startsWith('pad') && ctl.zoom;
-    h.lookBack = lookBack;
-    const gunSeat = lookBack ? 2 : 1,
-      otherSeat = lookBack ? 1 : 2;
-    const g = gunAt(car, gunSeat),
-      other = gunAt(car, otherSeat);
+    h.lookBack = false;
+    const g = gunAt(car, 1),
+      other = gunAt(car, 2);
     other.firing = false;
     other.zoom = 0;
-    if (lookBack) h.relYawB = clamp((h.relYawB ?? 0) + ctl.dYaw, -TURRETS.trunk.arc, TURRETS.trunk.arc);
-    else h.relYawF = clamp((h.relYawF ?? 0) + ctl.dYaw, -TURRETS.hood.arc, TURRETS.hood.arc);
-    gunAt(car, 1).yaw = wrapPi(car.yaw + TURRETS.hood.center + (h.relYawF ?? 0));
-    gunAt(car, 2).yaw = wrapPi(car.yaw + TURRETS.trunk.center + (h.relYawB ?? 0));
-    g.pitch += ctl.dPitch;
+    h.relYawF = 0;
+    h.relYawB = 0;
+    gunAt(car, 1).yaw = wrapPi(car.yaw + TURRETS.hood.center);
+    gunAt(car, 2).yaw = wrapPi(car.yaw + TURRETS.trunk.center);
+    g.pitch += ctl.dPitch * 0.3;
     clampGunToArc(car, 1);
     clampGunToArc(car, 2);
-    g.firing = G.state === 'playing' && ctl.fire && !g.jam;
-    if (g.jam) {
-      const J = (h.jamGame ||= GAMES.unjam.init());
-      if (GAMES.unjam.update(J, ctl, dt)) {
-        g.jam = false;
-        g.overheat = false;
-        g.heat = Math.min(g.heat, 0.45);
-        h.jamGame = null;
-        SFX.ok();
-      }
-    } else h.jamGame = null;
+    g.jam = false;
+    h.jamGame = null;
+    g.firing = G.state === 'playing' && ctl.fire;
   } else if (h.seat === 3) {
-    updateHumanMechanic(h, ctl, dt);
+    h.jamGame = null;
   } else {
     const g = gunAt(car, h.seat);
     const z = g.zoom > 0.5 ? 0.45 : 1;
-    g.yaw += ctl.dYaw * z;
+    g.yaw = defaultGunYaw(car, h.seat);
     g.pitch += ctl.dPitch * z;
     clampGunToArc(car, h.seat);
-    g.firing = ctl.fire && !g.jam;
-    // a jammed gun has to be cleared by its own gunner
-    if (g.jam) {
-      const J = (h.jamGame ||= GAMES.unjam.init());
-      if (GAMES.unjam.update(J, ctl, dt)) {
-        g.jam = false;
-        g.overheat = false;
-        g.heat = Math.min(g.heat, 0.45);
-        h.jamGame = null;
-        SFX.ok();
-      }
-    } else h.jamGame = null;
+    g.jam = false;
+    h.jamGame = null;
+    g.firing = ctl.fire;
     g.zoom = damp(g.zoom, ctl.zoom ? 1 : 0, 14, dt);
   }
 }
@@ -747,7 +673,7 @@ export function botGun(b: BotState, dt: number) {
     t.alive &&
     !g.jam &&
     G.state === 'playing' &&
-    err < 0.1 &&
+    err < 0.12 &&
     dist < S.range &&
     b.burstT > 0 &&
     g.heat < S.coolAt;

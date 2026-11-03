@@ -60,7 +60,7 @@
     "axleAbove": 11,
     "axleChance": 0.3,
     "gunJamAbove": 9,
-    "gunJamChance": 0.3,
+    "gunJamChance": 0,
     "fireLeakGun": 0.02
   },
   "credit": {

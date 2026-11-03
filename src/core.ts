@@ -69,8 +69,8 @@ export const TURRETS: Record<
   { pos: [number, number, number]; center: number; arc: number; cam: [number, number, number] }
 > = {
   // cam: how far behind / above the gun its gunner's camera sits
-  hood: { pos: [0, 0.915, 1.45], center: 0, arc: 1.95, cam: [1.3, 0.68, -0.08] },
-  trunk: { pos: [0, 0.84, -1.72], center: Math.PI, arc: 1.95, cam: [1.3, 0.72, -0.08] },
+  hood: { pos: [0, 0.915, 1.45], center: 0, arc: 0.42, cam: [1.3, 0.68, -0.08] },
+  trunk: { pos: [0, 0.84, -1.72], center: Math.PI, arc: 0.42, cam: [1.3, 0.72, -0.08] },
 };
 // which way each faces and how far it swings (data/car.json); where it is mounted is the model's
 onData(() => {

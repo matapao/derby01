@@ -74,120 +74,94 @@ function numberTexture(num: number) {
   return t;
 }
 
-const MARKER_SILVER = new THREE.MeshStandardMaterial({
-  color: 0xd4dde6,
-  roughness: 0.26,
-  metalness: 0.78,
+const MARKER_BLACK = new THREE.MeshStandardMaterial({
+  color: 0x181a20,
+  roughness: 0.55,
+  metalness: 0.45,
 });
-const MARKER_ANODIZED = new THREE.MeshStandardMaterial({
-  color: 0x2978a0,
-  roughness: 0.28,
-  metalness: 0.62,
-});
-const MARKER_GOLD = new THREE.MeshStandardMaterial({
-  color: 0xdba02e,
-  roughness: 0.28,
-  metalness: 0.72,
-});
-const MARKER_TANK = new THREE.MeshStandardMaterial({
-  color: 0xc84630,
-  roughness: 0.3,
-  metalness: 0.35,
-});
+const BALL_OFFSETS: readonly [number, number, number][] = [
+  // Bottom layer resting in the cylinder on the hood
+  [0, 0.034, 0],
+  [0.056, 0.034, 0],
+  [-0.056, 0.034, 0],
+  [0.028, 0.034, 0.048],
+  [-0.028, 0.034, 0.048],
+  [0.028, 0.034, -0.048],
+  [-0.028, 0.034, -0.048],
+  // Middle layer inside the bottom cylinder
+  [0, 0.072, 0.033],
+  [0.029, 0.072, -0.017],
+  [-0.029, 0.072, -0.017],
+  [0.074, 0.07, 0],
+  [-0.074, 0.07, 0],
+  [0, 0.07, 0.074],
+  [0, 0.07, -0.074],
+  [0.052, 0.07, 0.052],
+  [-0.052, 0.07, 0.052],
+  [0.052, 0.07, -0.052],
+  [-0.052, 0.07, -0.052],
+  // Upper layer and feed column rising into the barrel above
+  [0.052, 0.101, 0],
+  [-0.052, 0.101, 0],
+  [0.026, 0.101, 0.045],
+  [-0.026, 0.101, 0.045],
+  [0.026, 0.101, -0.045],
+  [-0.026, 0.101, -0.045],
+  [0, 0.104, 0],
+  [0, 0.142, 0],
+];
 const TURRET_GEO = {
-  puck: new THREE.CylinderGeometry(0.068, 0.084, 0.036, 14).translate(0, 0.018, 0),
-  collar: new THREE.CylinderGeometry(0.052, 0.056, 0.014, 12).translate(0, 0.038, 0),
-  yoke: mergeGeometries([
-    new THREE.CylinderGeometry(0.048, 0.052, 0.022, 12).translate(0, 0.011, 0),
-    boxGeo(0.096, 0.016, 0.038, 0, 0.024, 0),
-    boxGeo(0.014, 0.115, 0.034, 0.042, 0.078, 0),
-    boxGeo(0.014, 0.115, 0.034, -0.042, 0.078, 0),
-    new THREE.CylinderGeometry(0.018, 0.018, 0.108, 10).rotateZ(Math.PI / 2).translate(0, 0.134, 0),
+  ring: new THREE.CylinderGeometry(0.118, 0.126, 0.018, 14).translate(0, 0.009, 0),
+  cradle: mergeGeometries([
+    // Top rim of the bottom cylinder + collar feeding upwards into the barrel
+    new THREE.TorusGeometry(0.112, 0.007, 6, 14).rotateX(Math.PI / 2).translate(0, 0.12, 0),
+    new THREE.CylinderGeometry(0.044, 0.054, 0.018, 12).translate(0, 0.122, 0),
   ]),
-  body: mergeGeometries([
-    new THREE.CylinderGeometry(0.027, 0.027, 0.25, 12).rotateX(Math.PI / 2).translate(0, 0, -0.01),
-    new THREE.CylinderGeometry(0.023, 0.023, 0.21, 12).rotateX(Math.PI / 2).translate(0, -0.036, 0),
-    boxGeo(0.042, 0.038, 0.19, 0, -0.018, -0.005),
-    boxGeo(0.03, 0.076, 0.038, 0, -0.072, -0.052, 0.2),
-    boxGeo(0.018, 0.048, 0.01, 0, -0.066, -0.012, -0.14),
-    boxGeo(0.018, 0.01, 0.042, 0, -0.088, -0.032),
-    new THREE.CylinderGeometry(0.018, 0.02, 0.078, 10).translate(0, -0.068, 0.068),
+  barrel: mergeGeometries([
+    // Cylindrical breech and barrel mounted directly above the bottom paintball cylinder
+    new THREE.CylinderGeometry(0.036, 0.036, 0.036, 10).translate(0, -0.02, 0),
+    new THREE.CylinderGeometry(0.038, 0.038, 0.22, 12).rotateX(Math.PI / 2).translate(0, 0, 0.02),
+    new THREE.CylinderGeometry(0.026, 0.028, 0.44, 12).rotateX(Math.PI / 2).translate(0, 0, 0.34),
+    new THREE.CylinderGeometry(0.031, 0.031, 0.04, 12).rotateX(Math.PI / 2).translate(0, 0, 0.56),
   ]),
-  silver: mergeGeometries([
-    new THREE.CylinderGeometry(0.022, 0.025, 0.032, 10).rotateX(Math.PI / 2).translate(0, 0, -0.148),
-    boxGeo(0.008, 0.034, 0.012, 0, -0.064, -0.028, 0.1),
-    new THREE.CylinderGeometry(0.019, 0.021, 0.046, 10).translate(0, 0.036, 0.01),
-    boxGeo(0.032, 0.022, 0.044, 0, -0.108, -0.068),
-    new THREE.CylinderGeometry(0.005, 0.005, 0.138, 6)
-      .rotateX(Math.PI / 2 - 0.28)
-      .translate(0, -0.092, 0.002),
-    new THREE.CylinderGeometry(0.015, 0.017, 0.32, 10).rotateX(Math.PI / 2).translate(0, 0, 0.5),
-    new THREE.CylinderGeometry(0.019, 0.016, 0.04, 10).rotateX(Math.PI / 2).translate(0, 0, 0.64),
-  ]),
-  accents: mergeGeometries([
-    new THREE.CylinderGeometry(0.022, 0.022, 0.016, 10).translate(0, -0.042, 0.068),
-    new THREE.CylinderGeometry(0.024, 0.024, 0.014, 10).translate(0, 0.042, 0.01),
-    new THREE.CylinderGeometry(0.018, 0.018, 0.032, 10).rotateX(Math.PI / 2).translate(0, -0.038, -0.12),
-  ]),
-  barrelBack: new THREE.CylinderGeometry(0.019, 0.023, 0.225, 10).rotateX(Math.PI / 2).translate(0, 0, 0.227),
-  tank: mergeGeometries([
-    new THREE.CylinderGeometry(0.034, 0.034, 0.13, 12).rotateX(Math.PI / 2).translate(0, -0.038, -0.2),
-    new THREE.SphereGeometry(0.034, 12, 8).translate(0, -0.038, -0.265),
-    new THREE.SphereGeometry(0.034, 12, 8).scale(1, 1, 0.65).translate(0, -0.038, -0.135),
-  ]),
-  cam: boxGeo(0.036, 0.034, 0.068),
-  lens: new THREE.CylinderGeometry(0.014, 0.014, 0.01, 10).rotateX(Math.PI / 2).translate(0, 0, 0.038),
 };
-const TURRET_LENS = new THREE.MeshStandardMaterial({
-  color: 0x0d1a24,
-  emissive: 0xff2a2a,
-  emissiveIntensity: 0.5,
-  roughness: 0.05,
-}); // a red REC light in the glass
 const HOPPER_GEO = {
-  shell: new THREE.SphereGeometry(0.068, 14, 10).scale(0.76, 0.66, 1.38).translate(0, 0.048, -0.015),
-  balls: new THREE.SphereGeometry(0.056, 12, 8).scale(0.74, 0.56, 1.3).translate(0, 0.038, -0.015),
-  lid: new THREE.CylinderGeometry(0.036, 0.04, 0.012, 12).translate(0, 0.09, -0.02),
+  shell: mergeGeometries([
+    // Transparent bottom cylinder + vertical feed tube into the barrel
+    new THREE.CylinderGeometry(0.112, 0.112, 0.105, 14, 1, true).translate(0, 0.068, 0),
+    new THREE.CylinderGeometry(0.034, 0.04, 0.048, 10, 1, true).translate(0, 0.144, 0),
+  ]),
+  balls: mergeGeometries(
+    // Lower-poly spheres (6x5 segments) so each paintball is distinct and lightweight
+    BALL_OFFSETS.map(([x, y, z]) => new THREE.SphereGeometry(0.026, 6, 5).translate(x, y, z)),
+  ),
 };
 const HOPPER_SHELL = new THREE.MeshStandardMaterial({
-  color: 0xeef5f9,
+  color: 0xeaf4ff,
   transparent: true,
-  opacity: 0.48,
+  opacity: 0.24,
   roughness: 0.12,
+  side: THREE.DoubleSide,
   depthWrite: false,
 });
-// Modded remote paintball marker on a slim gimbal mount with a low-profile loader hopper.
-// Pivot heights: yaw +0.036, pitch +0.17, muzzle 0.66 along the barrel.
-function buildSmallTurret(ballMat: THREE.MeshStandardMaterial, trimMat: THREE.MeshStandardMaterial) {
+// Bottom-fed turret: paintballs sit in a cylinder on the hood and feed upwards into the barrel above.
+// Pivot heights: yaw +0.0, pitch +0.17 (total +0.17).
+function buildSmallTurret(ballMat: THREE.MeshStandardMaterial) {
   const base = new THREE.Group();
-  const puck = new THREE.Mesh(TURRET_GEO.puck, MARKER_SILVER);
-  const collar = new THREE.Mesh(TURRET_GEO.collar, MARKER_GOLD);
+  const ring = new THREE.Mesh(TURRET_GEO.ring, MARKER_BLACK);
   const yaw = new THREE.Group();
-  yaw.position.y = 0.036;
-  const yoke = new THREE.Mesh(TURRET_GEO.yoke, MARKER_SILVER);
+  const cradle = new THREE.Mesh(TURRET_GEO.cradle, MARKER_BLACK);
+  const balls = new THREE.Mesh(HOPPER_GEO.balls, ballMat);
+  balls.castShadow = true;
+  balls.receiveShadow = true;
+  const shell = new THREE.Mesh(HOPPER_GEO.shell, HOPPER_SHELL);
   const pitch = new THREE.Group();
-  pitch.position.set(0, 0.134, 0);
-  const body = new THREE.Mesh(TURRET_GEO.body, MARKER_ANODIZED);
-  const silver = new THREE.Mesh(TURRET_GEO.silver, MARKER_SILVER);
-  const accents = new THREE.Mesh(TURRET_GEO.accents, MARKER_GOLD);
-  const barrelBack = new THREE.Mesh(TURRET_GEO.barrelBack, trimMat);
-  const tank = new THREE.Mesh(TURRET_GEO.tank, MARKER_TANK);
-  const hopper = new THREE.Group();
-  hopper.position.set(0, 0.055, 0.01);
-  hopper.add(
-    new THREE.Mesh(HOPPER_GEO.balls, ballMat),
-    new THREE.Mesh(HOPPER_GEO.shell, HOPPER_SHELL),
-    new THREE.Mesh(HOPPER_GEO.lid, trimMat),
-  );
-  // the camera the gunner watches through their goggles, clipped to the marker's side rail
-  const cam = new THREE.Mesh(TURRET_GEO.cam, MARKER_SILVER),
-    lens = new THREE.Mesh(TURRET_GEO.lens, TURRET_LENS);
-  cam.position.set(0.042, 0.01, 0.02);
-  lens.position.set(0.042, 0.01, 0.02);
-  pitch.add(body, silver, accents, barrelBack, tank, hopper, cam, lens);
-  yaw.add(yoke, pitch);
-  base.add(puck, collar, yaw);
-  for (const m of [puck, yoke, body, silver, barrelBack, tank]) m.castShadow = true;
+  pitch.position.set(0, 0.17, 0);
+  const barrel = new THREE.Mesh(TURRET_GEO.barrel, MARKER_BLACK);
+  pitch.add(barrel);
+  yaw.add(cradle, balls, shell, pitch);
+  base.add(ring, yaw);
+  for (const m of [ring, cradle, barrel]) m.castShadow = true;
   return { base, yaw, pitch };
 }
 
@@ -442,10 +416,11 @@ export function createCar(idx: number, cfg: CarSetup): Car {
   // Reinforced chassis mounts keep marker aim steady while the surrounding lids flap.
   car.turrets = {};
   for (const key of ['hood', 'trunk'] as const) {
-    const rig = buildSmallTurret(car.ballMat, car.trimMat);
+    const rig = buildSmallTurret(car.ballMat);
     const mount = TURRETS[key].pos;
     rig.base.position.set(mount[0], mount[1], mount[2]);
-    body.add(rig.base);
+    rig.yaw.rotation.y = TURRETS[key].center;
+    if (key === 'hood') body.add(rig.base);
     car.turrets[key] = rig;
   }
 
@@ -828,7 +803,7 @@ export function syncCarVisual(car: Car, dt: number) {
     const g = gunAt(car, s),
       rig = requireValue(car.turrets[s === 1 ? 'hood' : 'trunk']);
     rig.yaw.rotation.y = wrapPi(g.yaw - car.yaw);
-    rig.pitch.rotation.x = -(g.pitch + (g.loft || 0)) + g.recoil * 0.04; // barrel lifts to lob the balls
+    rig.pitch.rotation.x = -g.pitch + g.recoil * 0.03;
   }
 }
 const STEER_AXIS = new THREE.Vector3(0, 0.423, -0.906).normalize();

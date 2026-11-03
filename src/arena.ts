@@ -303,8 +303,15 @@ function groundTexture(T: Layout) {
         }
       }
     // parking bays: each double row, and an arrow in each aisle between them
+    const lots = (T.ground ?? []).filter((a) => a.surface === 'lot');
     for (const m of marks)
       if (m.type === 'bays') {
+        const clipLot = lots.find((a) => pointInPoly(m.x, m.z, a.poly));
+        if (clipLot) {
+          g.save();
+          path(clipLot.poly);
+          g.clip();
+        }
         for (let r = 0; r < m.rows; r++) {
           const [x, z] = toWorld(m.x, m.z, m.yaw, r * 16.5, 0);
           paintBays(g, X, Z, S, { x, z, yaw: m.yaw, n: m.n, hw: 5, hl: m.n * 1.25 });
@@ -324,7 +331,29 @@ function groundTexture(T: Layout) {
             g.fill();
           }
         }
+        if (clipLot) g.restore();
       }
+    if (T.id === 'office' && T.roads?.[0]) {
+      const roadLine = T.roads[0].line;
+      const offsetPts = (pts: Pt[], d: number): Pt[] =>
+        pts.map((p, i) => {
+          const a = requireValue(pts[Math.max(0, i - 1)]),
+            b = requireValue(pts[Math.min(pts.length - 1, i + 1)]);
+          const dx = b[0] - a[0],
+            dz = b[1] - a[1],
+            l = Math.hypot(dx, dz) || 1;
+          return [p[0] + (dz / l) * d, p[1] - (dx / l) * d];
+        });
+      g.save();
+      g.lineWidth = S(0.12);
+      g.strokeStyle = 'rgba(240,240,236,0.85)';
+      g.setLineDash([S(3), S(3)]);
+      for (const d of [-3.15, 3.15]) {
+        path(offsetPts(roadLine, d), false);
+        g.stroke();
+      }
+      g.restore();
+    }
     // fire lane hatching and crossings
     for (const m of marks) {
       if (m.type === 'hatch') {
@@ -1109,7 +1138,38 @@ export function buildArena(layout: Layout) {
     field.receiveShadow = true;
     root.add(field);
   }
-  setNAV(autoNav(15));
+  if (T.id === 'office') {
+    const officeNav: Pt[] = [
+      [8, -22],
+      [28, -32],
+      [44, -18],
+      [26, -8],
+      [4, -4],
+      [-5, -28],
+      [-22, -26],
+      [-38, -21],
+      [-22, -12],
+      [-20, 4],
+      [-5, 6],
+      [4, 15],
+      [16, 16],
+      [38, 6],
+      [56, -6],
+      [-10, 34],
+      [-30, 45],
+      [-48, 55],
+      [-60, -18],
+      [-74, -14],
+      [-60, 4],
+      [-46, 2],
+      [-76, 12],
+      [-78, 32],
+      [-68, 50],
+    ];
+    setNAV(buildNav(officeNav));
+  } else {
+    setNAV(autoNav(15));
+  }
 }
 
 // ---------------------------------------------------------------------
@@ -1151,6 +1211,41 @@ function buildEdges(root: THREE.Group, plain: PlainMaterial) {
       m.position.set(s.x, h / 2, s.z);
       m.rotation.y = s.yaw;
       m.castShadow = m.receiveShadow = true;
+      root.add(m);
+    }
+  }
+  if (T.id === 'office' && T.bounds.poly.length >= 19) {
+    const B = T.bounds.poly;
+    // north stream edge: wooden rail fence (B[0] -> B[4])
+    const wood = plain(0x6b533b, 0.9);
+    const postGeo = new THREE.BoxGeometry(0.12, 1.1, 0.12).translate(0, 0.55, 0);
+    for (let i = 0; i < 4; i++) {
+      const s = segInfo(requireValue(B[i]), requireValue(B[i + 1])),
+        n = Math.max(2, Math.round(s.len / 3));
+      for (let k = 0; k <= n; k++) {
+        const p = new THREE.Mesh(postGeo, wood);
+        const a = requireValue(B[i]),
+          b = requireValue(B[i + 1]);
+        p.position.set(lerp(a[0], b[0], k / n), 0, lerp(a[1], b[1], k / n));
+        p.castShadow = true;
+        root.add(p);
+      }
+      for (const y of [0.55, 0.95]) {
+        const rail = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.09, s.len), wood);
+        rail.position.set(s.x, y, s.z);
+        rail.rotation.y = s.yaw;
+        rail.castShadow = true;
+        root.add(rail);
+      }
+    }
+    // south & west edge: low grassy bank / verge along the road and west boundary (B[7] -> B[0])
+    const bankMat = plain(0x466b2c, 0.95);
+    for (let i = 7; i < B.length; i++) {
+      const s = segInfo(requireValue(B[i]), requireValue(B[(i + 1) % B.length]));
+      const m = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.35, s.len + 1.2), bankMat);
+      m.position.set(s.x, 0.17, s.z);
+      m.rotation.y = s.yaw;
+      m.receiveShadow = true;
       root.add(m);
     }
   }
@@ -1334,7 +1429,7 @@ function buildBackdrop(
       for (let row = 0; row < 2; row++)
         spots.push([
           lerp(a[0], requireValue(b[0]), k / n) + rand(-1, 1),
-          lerp(a[1], requireValue(b[1]), k / n) - 19 - row * 5.5 + rand(-1, 1),
+          lerp(a[1], requireValue(b[1]), k / n) - (T.id === 'office' ? 4 : 19) - row * 5.5 + rand(-1, 1),
           rand(2.6, 4),
         ]);
   }

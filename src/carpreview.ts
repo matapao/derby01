@@ -25,8 +25,13 @@ interface Preview {
 }
 let P: Preview | null = null; // { renderer, scene, camera, cars: Map(row -> { key, car }), raf }
 
-function start() {
-  const renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true });
+function start(): Preview | null {
+  let renderer: THREE.WebGLRenderer;
+  try {
+    renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true, powerPreference: 'low-power' });
+  } catch {
+    return null;
+  }
   renderer.setSize(W, H, false);
   const scene = new THREE.Scene();
   scene.add(new THREE.HemisphereLight(0xdfe8ff, 0x3a3344, 1.3));
@@ -47,6 +52,7 @@ export function showCarPreviews(
   canvases: HTMLCanvasElement[],
 ): void {
   const preview = P ?? start();
+  if (!preview) return;
   const live = new Set();
   cars.forEach((cfg, i: number) => {
     const canvas = canvases[i],
@@ -88,6 +94,8 @@ function frame(t: number) {
     if (!row.canvas || !row.canvas.isConnected) continue;
     for (const r of P.cars.values()) r.car.root.visible = r === row; // one car at a time
     row.car.yaw = t * 0.0006 + i * 1.3;
+    row.car.gun[1].yaw = row.car.yaw;
+    row.car.gun[2].yaw = row.car.yaw + Math.PI;
     syncCarVisual(row.car, 0);
     P.renderer.render(P.scene, P.camera);
     const g = canvasContext(row.canvas);
@@ -105,3 +113,4 @@ export function stopCarPreviews(): void {
   P.renderer.forceContextLoss();
   P = null;
 }
+window.addEventListener('pagehide', stopCarPreviews);

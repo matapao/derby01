@@ -33,25 +33,34 @@ interface Surface {
 //  Renderer, scene, sky, light
 //  Crisp CSS-resolution rendering with a bounded pixel budget for modest GPUs.
 // =====================================================================
-// Without WebGL 2 there's no game: the loading screen says so, and nothing else runs.
+// Without WebGL 2 there's no game: try high-performance first, then default/low-power fallbacks.
 function makeRenderer(): THREE.WebGLRenderer {
-  try {
-    return new THREE.WebGLRenderer({
-      antialias: false,
-      powerPreference: 'high-performance',
-      preserveDrawingBuffer: new URLSearchParams(location.search).has('test'),
-    });
-  } catch (err) {
-    const note = document.getElementById('loading');
-    if (note) {
-      note.textContent =
-        'derby01 needs WebGL 2. Try another browser, or turn on hardware acceleration in this one.';
-      note.style.cssText = 'font: 600 20px var(--ui); text-align: center; padding: 24px;';
+  const preserveDrawingBuffer = new URLSearchParams(location.search).has('test');
+  let lastErr: unknown;
+  for (const powerPreference of ['high-performance', 'default', 'low-power'] as const) {
+    try {
+      return new THREE.WebGLRenderer({
+        antialias: false,
+        powerPreference,
+        preserveDrawingBuffer,
+      });
+    } catch (err) {
+      lastErr = err;
     }
-    throw err;
   }
+  const note = document.getElementById('loading');
+  if (note) {
+    note.textContent =
+      'derby01 needs WebGL 2. Try another browser, or turn on hardware acceleration in this one.';
+    note.style.cssText = 'font: 600 20px var(--ui); text-align: center; padding: 24px;';
+  }
+  throw lastErr;
 }
 export const renderer = makeRenderer();
+window.addEventListener('pagehide', () => {
+  renderer.dispose();
+  renderer.forceContextLoss();
+});
 renderer.domElement.id = 'gl';
 renderer.toneMapping = THREE.NoToneMapping;
 renderer.shadowMap.enabled = true;

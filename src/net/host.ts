@@ -11,7 +11,7 @@ import { refreshOccupantVisuals, updatePlayerTag } from '../car.ts';
 import { G } from '../state.ts';
 import { gunMuzzle } from '../combat.ts';
 import { aimDir } from '../gameplay/geometry.ts';
-import { clampGunToArc, makeBot, switchSeat } from '../control.ts';
+import { clampGunToArc, defaultGunYaw, makeBot, switchSeat } from '../control.ts';
 import { DEFAULT_KITS, KIT_NAMES } from '../kit-data.ts';
 import { applyFix, mechTasks, startFire } from '../mechanic.ts';
 import { CAN_FUEL } from '../mechanic-data.ts';
@@ -199,7 +199,7 @@ export function driveRemote(h: Human, dt: number): void {
     gunAt(car, otherSeat).zoom = 0;
     const g = gunAt(car, gunSeat);
     if (c) {
-      g.yaw = c.aimYaw;
+      g.yaw = defaultGunYaw(car, gunSeat);
       g.pitch = c.aimPitch;
       clampGunToArc(car, gunSeat);
       aimDir(g.yaw, g.pitch, _gunDir);

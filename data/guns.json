@@ -11,8 +11,8 @@
   "recover": 0.35,
   "hot": 0.75,
   "hotSpray": 0.8,
-  "jamOnOverheat": 0.5,
-  "jamWhenHot": 0.012,
+  "jamOnOverheat": 0,
+  "jamWhenHot": 0,
   "zoomSpread": 0.5,
   "radar": { "hit": 3.5, "splash": 1.5, "splashRadius": 0.6 }
 }

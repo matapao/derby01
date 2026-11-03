@@ -8,8 +8,8 @@
     "mechanic": { "label": "Mechanic · front seat", "role": "MECHANIC" }
   },
   "turrets": {
-    "hood": { "facing": 0, "arc": 1.95, "pitchMin": -0.2, "pitchMax": 0.55 },
-    "trunk": { "facing": 3.1416, "arc": 1.95, "pitchMin": -0.2, "pitchMax": 0.55 }
+    "hood": { "facing": 0, "arc": 0.42, "pitchMin": -0.1, "pitchMax": 0.22 },
+    "trunk": { "facing": 3.1416, "arc": 0.42, "pitchMin": -0.1, "pitchMax": 0.22 }
   },
   "radar": { "period": 1.6, "range": 70, "hp": 26 },
   "bumpers": {

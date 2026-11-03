@@ -730,8 +730,8 @@ function previewSetup() {
       car.occ[s] = makeBot(car, s);
     });
     for (const s of GUN_SEATS) {
-      gunAt(car, s).yaw = defaultGunYaw(car, s) + (s === 1 ? 0.5 : -0.4);
-      gunAt(car, s).pitch = 0.12;
+      gunAt(car, s).yaw = defaultGunYaw(car, s);
+      gunAt(car, s).pitch = 0.02;
     }
     refreshOccupantVisuals(car);
     syncCarVisual(car, 1);
@@ -858,7 +858,7 @@ function tick(dt: number, draw = true) {
       for (let s = 0; s < 4; s++) {
         const o = car.occ[s];
         if (o && o.kind === 'bot' && o.bot) {
-          if ((s === 1 || s === 2) && humanInCar) continue;
+          if (s === 2 || (s === 1 && humanInCar)) continue;
           (s === 0 ? botDrive : s === 3 ? botMechanic : botGun)(o.bot, dt);
         }
       }
@@ -868,7 +868,10 @@ function tick(dt: number, draw = true) {
     acc = Math.min(acc + dt, 0.1);
     while (acc >= STEP) {
       physicsStep(STEP);
-      for (const car of G.cars) for (const s of GUN_SEATS) updateGun(car, s, STEP);
+      for (const car of G.cars) {
+        gunAt(car, 2).firing = false;
+        updateGun(car, 1, STEP);
+      }
       updateBullets(STEP);
       acc -= STEP;
     }
