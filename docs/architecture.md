@@ -14,7 +14,7 @@ Portable `src/gameplay/` rules receive state, tuning and effects explicitly, wit
 | Cars and participants                           | `car-types.ts`, `human-types.ts`, `gameplay/model.ts`, `gameplay/participants.ts`        |
 | Construction and visual geometry                | `car.ts`, `car-interior.ts`, `car-panel-motion.ts`, `mesh-geometry.ts`, `radar-model.ts` |
 | Data/schema validation and revision hooks       | `data.ts`, `blocks/validate.ts`, `kit-data.ts`                                           |
-| Seeded maps and colliders                       | `layout.ts`, `town/`, `arena.ts`, `world.ts`                                             |
+| Seeded maps and colliders                       | `layout.ts`, `town/`, `arena.ts`, `ground-paint.ts`, `world.ts`                          |
 | Scoring, damage, rounds and systems             | `gameplay/`; `score.ts` and `round.ts` are adapters                                      |
 | Geometry and input state                        | `gameplay/geometry.ts`, `gameplay/input.ts`                                              |
 | HUD and required DOM/context binding            | `hud.ts`, `hud-types.ts`, `browser-dom.ts`                                               |
