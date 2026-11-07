@@ -41,6 +41,7 @@ Portable `src/gameplay/` rules receive state, tuning and effects explicitly, wit
 - Keep `core.ts` world/car axes and seat indices consistent across cameras, physics and codecs. Geometry results never share mutable scratch state.
 - Focus/control loss clears held and one-shot input. Dispose owned resources; preserve shared geometry/materials.
 - Relative asset URLs support versioned mounts. Build before play. Visible front-cover credits describe installed assets; candidates stay separate.
+- `index.html`'s policy limits scripts, plugins, `<base>` and forms only. Where the game connects and loads from is the page server's: in a host's sandboxed frame Safari matches `'self'` to nothing.
 
 ## Compiler and wire boundaries
 
