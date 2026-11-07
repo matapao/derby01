@@ -7,9 +7,12 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="theme-color" content="#07081a" />
+    <!-- Where the game connects and loads from is the page server's to say (a zirbel host sends its own
+         policy): inside a host's sandboxed frame Safari matches 'self' to nothing, so a 'self' limit here
+         would block the game's own files there. -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'none'; script-src 'self'; worker-src blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; media-src 'self' blob: https://opengameart.org; base-uri 'none'; form-action 'none'; object-src 'none'"
+      content="script-src 'self'; worker-src blob:; style-src 'self' 'unsafe-inline'; base-uri 'none'; form-action 'none'; object-src 'none'"
     />
     <title>derby01</title>
     <link rel="icon" href="data:," />

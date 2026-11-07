@@ -41,6 +41,7 @@
     "src/music-settings.ts",
     "src/random-id.ts",
     "test/random-id.test.ts",
+    "test/page-policy.test.ts",
     "src/music-model.ts",
     "src/music-player.ts",
     "src/music-bridge.ts",
