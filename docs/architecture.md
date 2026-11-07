@@ -63,7 +63,7 @@ The local HTTP server confines reads to its real build root and binds loopback o
 `net/music-room.ts` shares host choices, without recordings or listener volumes.
 `music-bridge.ts` uses a same-origin, versioned, throttled MessagePort. Hosted storage belongs to Zirbel's trusted player outside the opaque game frame; uploads are hash-verified before commit.
 Standalone storage remains a fallback pending a distributable shared adapter.
-`music-hash.ts` uses Web Crypto or the bundled public Zirbel hash owner on HTTP LAN;
+`music-hash.ts` uses Web Crypto or the bundled public Zirbel hash owner on HTTP LAN, where `random-id.ts` makes playlist ids;
 `tools/vendor-hash.ts` preserves that export's source hash/license. `music-ui.ts` renders safe credit text/links.
 
 `onboarding.ts` persists its versioned guide only on Skip/Finish.

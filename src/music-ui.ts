@@ -18,6 +18,7 @@ import { DEFAULT_SOUND, loadSoundSettings, SOUND_KEY, soundLevels } from './musi
 import { connectRadio, type RadioState } from './music-bridge.ts';
 import { roomMusic, setRoomMusic, subscribeRoomMusic } from './net/music-room.ts';
 import { currentRole, subscribeRole } from './net/role.ts';
+import { randomId } from './random-id.ts';
 
 export function mountSoundControls(opening: () => void, picture: { get(): string; set(mode: string): void }) {
   const dialog = document.createElement('dialog');
@@ -366,7 +367,7 @@ export function mountSoundControls(opening: () => void, picture: { get(): string
         for (const file of files.files) tracks.push(await musicTrackFromFile(file));
         if (disposed) return;
         const playlist: Playlist = {
-          id: `device-${crypto.randomUUID()}`,
+          id: `device-${randomId()}`,
           title: find('name', HTMLInputElement).value.trim() || 'My driving mix',
           tracks,
         };
@@ -432,7 +433,7 @@ export function mountSoundControls(opening: () => void, picture: { get(): string
         if (!lists.length && raw && typeof raw === 'object' && 'radio' in raw) {
           const queue = readMusicQueue({ title: 'Imported Radio playlist', tracks: raw.radio });
           if (queue && queue.tracks.every((id) => !!musicCredit(id)))
-            lists = [{ id: `personal-${crypto.randomUUID()}`, ...queue }];
+            lists = [{ id: `personal-${randomId()}`, ...queue }];
         }
         if (!lists.length)
           throw new Error('No compatible Zirbel Radio playlist found. Export a playlist from Radio.');
