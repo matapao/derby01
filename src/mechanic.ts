@@ -30,7 +30,7 @@ import {
 import { G } from './state.ts';
 import { SMOKE, smokePuff } from './fx.ts';
 import { SFX } from './audio.ts';
-import { clearWindshieldCracks } from './paint.ts';
+import { fitNewWindshield } from './paint.ts';
 import { RADAR, fitRadarHead } from './radar-model.ts';
 import { jamGun } from './gun-state.ts';
 import { carToWorld } from './gameplay/geometry.ts';
@@ -383,7 +383,7 @@ export function applyFix(car: Car, task: MechanicTask, byBot: boolean): boolean 
       break;
     case 'glass':
       car.stock.glass = Math.max(0, car.stock.glass - 1);
-      clearWindshieldCracks(car);
+      fitNewWindshield(car);
       break;
     case 'chassis':
       car.hp = Math.min(s.maxHp, car.hp + D.mechanic.jobs.chassis.fix);

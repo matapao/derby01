@@ -3,9 +3,10 @@
 A paintball demolition derby for the browser, in TypeScript and three.js, with clear stylized
 graphics. Two to eight cars, one player per car: sit inside the car, drive with `WASD`, aim with the
 mouse and left-click to fire the front paintball marker, or hold right-click to look back through the
-rear window and shoot pursuers with the rear marker. When the front or rear window gets smashed it
-falls off cleanly, and rubber bumpers cushion impacts like Tivoli bumper cars while panels still
-loosen and fly off. The CPU drives any car without a human player. On a zirbel host, other screens
+rear window and shoot pursuers with the rear marker. The windshield stays in its frame however
+cracked, so paint keeps landing on it and blocks the view until the wipers sweep it away (paint
+beyond their reach stays until a new windscreen goes in); only a smashed rear window falls off. Rubber bumpers cushion impacts like Tivoli bumper cars while panels
+still loosen and fly off. The CPU drives any car without a human player. On a zirbel host, other screens
 join online.
 
 - **The town** is laid out from a map number (_New map_ rolls another; `?map=123` opens one): three

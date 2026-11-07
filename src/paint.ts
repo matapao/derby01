@@ -1,4 +1,4 @@
-import { drawPaintLayer, fadeCameraPaint, paintViewSurface } from './paint-view.ts';
+import { drawPaintLayer, fadeCameraPaint, paintViewSurface, wipeShieldPaint } from './paint-view.ts';
 import { requireValue } from './required-fields.ts';
 import type { Car } from './car-types.ts';
 import type { LocalHuman } from './human-types.ts';
@@ -432,8 +432,8 @@ export function paintHitCar(
 }
 
 // ---------------------------------------------------------------------
-//  Wiped glass. Paint lands on a small canvas; the wipers sweep back and forth all the time,
-//  thinning the paint a bit on every pass and leaving streaks.
+//  Wiped glass. Paint lands on a small canvas and stays there until a wiper blade passes over it:
+//  the wipers sweep back and forth all the time, thinning the paint a bit on every pass and leaving streaks.
 // ---------------------------------------------------------------------
 export class WipedGlass {
   w: number;
@@ -493,7 +493,6 @@ export class WipedGlass {
   }
   // u, v in 0..1; size = width of the blob in canvas pixels
   splat(u: number, v: number, size: number, css: string) {
-    if (this.surface === 'windshield' && this.crack?.shattered) return;
     const s = size / BLOB_FRAC,
       g = this.g;
     g.save();
@@ -505,7 +504,6 @@ export class WipedGlass {
     this.dirty = true;
   }
   spray(n: number, css: string) {
-    if (this.surface === 'windshield' && this.crack?.shattered) return;
     const g = this.g;
     g.fillStyle = css;
     for (let i = 0; i < n; i++) {
@@ -537,40 +535,9 @@ export class WipedGlass {
       mid = (this.a0 + this.a1) / 2,
       amp = (this.a1 - this.a0) / 2;
     this.ang = mid + amp * Math.sign(s) * Math.pow(Math.abs(s), 0.65); // lingers a moment at each end, like real wipers
-    if (this.cover < 0.003) {
-      this.cover = 0;
-      return;
-    }
-    const lo = Math.min(prev, this.ang) + Math.PI,
-      hi = Math.max(prev, this.ang) + Math.PI;
-    if (hi - lo < 1e-4) return;
-    const g = this.g;
-    g.save();
-    g.globalCompositeOperation = 'destination-out';
-    let area = 0;
-    for (const wp of this.wipers) {
-      const r0 = wp.len * 0.12;
-      g.beginPath();
-      g.arc(wp.x, wp.y, wp.len, lo, hi);
-      g.arc(wp.x, wp.y, r0, hi, lo, true);
-      g.closePath();
-      g.fillStyle = 'rgba(0,0,0,0.3)';
-      g.fill();
-      // the rubber wipes cleaner in some bands: streaks
-      g.beginPath();
-      for (let r = r0 + 5; r < wp.len - 4; r += 10) {
-        g.moveTo(wp.x + Math.cos(lo) * (r + 5), wp.y + Math.sin(lo) * (r + 5));
-        g.arc(wp.x, wp.y, r + 5, lo, hi);
-        g.arc(wp.x, wp.y, r, hi, lo, true);
-        g.closePath();
-      }
-      g.fillStyle = 'rgba(0,0,0,0.2)';
-      g.fill();
-      area += 0.5 * (wp.len * wp.len - r0 * r0) * (hi - lo);
-    }
-    g.restore();
-    this.cover *= 1 - 0.33 * Math.min(1, (area * 0.62) / (this.w * this.h));
-    this.dirty = true;
+    const cover = wipeShieldPaint(this.g, this, prev, this.ang);
+    if (cover !== this.cover) this.dirty = true;
+    this.cover = cover;
   }
 }
 
@@ -770,13 +737,14 @@ const DEBRIS_GLASS_MAT = new THREE.MeshStandardMaterial({
   side: THREE.DoubleSide,
 });
 
-function detachWindowPane(car: Car, kind: 'shield' | 'rear') {
-  const f = GLASS[kind],
+// The rear window falls out when smashed. The windshield never does.
+function detachRearWindow(car: Car) {
+  const f = GLASS.rear,
     s = f.len / 2;
   car.body.updateWorldMatrix(true, false);
   const pos = new THREE.Vector3(0, f.y + f.uy * s, f.z + f.uz * s).applyMatrix4(car.body.matrixWorld);
   const basis = new THREE.Matrix4().makeBasis(
-    new THREE.Vector3(kind === 'shield' ? -1 : 1, 0, 0),
+    new THREE.Vector3(1, 0, 0),
     new THREE.Vector3(0, f.uy, f.uz),
     new THREE.Vector3(0, f.ny, f.nz),
   );
@@ -788,31 +756,21 @@ function detachWindowPane(car: Car, kind: 'shield' | 'rear') {
   vel.y += rand(2.2, 4.2);
   addDebris(new THREE.Mesh(SHIELD_GEO, DEBRIS_GLASS_MAT), pos, quat, vel, 8);
   const u = car.glassMat.userData['u'];
-  if (kind === 'shield') {
-    if (u?.frontGlassOn) u.frontGlassOn.value = 0;
-    car.shieldFilm.visible = false;
-    car.crackFilm.visible = false;
-    for (const arm of car.wiperArms) arm.visible = false;
-    const sh = car.glass.shield;
-    sh.g.clearRect(0, 0, sh.w, sh.h);
-    sh.cover = 0;
-    sh.dirty = true;
-  } else {
-    if (u?.rearGlassOn) u.rearGlassOn.value = 0;
-    const B = ATLAS.B;
-    car.cracks.g.clearRect(requireValue(B[0]), requireValue(B[1]), requireValue(B[2]), requireValue(B[3]));
-    car.cracks.dirty = true;
-    car.atlas.g.clearRect(
-      requireValue(B[0]),
-      requireValue(B[1]),
-      requireValue(B[2]),
-      Math.round((ATLAS.YMAX - 0.88) * ATLAS.PX),
-    );
-    car.atlas.dirty = true;
-  }
+  if (u?.rearGlassOn) u.rearGlassOn.value = 0;
+  const B = ATLAS.B;
+  car.cracks.g.clearRect(requireValue(B[0]), requireValue(B[1]), requireValue(B[2]), requireValue(B[3]));
+  car.cracks.dirty = true;
+  car.atlas.g.clearRect(
+    requireValue(B[0]),
+    requireValue(B[1]),
+    requireValue(B[2]),
+    Math.round((ATLAS.YMAX - 0.88) * ATLAS.PX),
+  );
+  car.atlas.dirty = true;
 }
 
-// Crack the windshield at (u, v), 0..1. When pretty smashed, it falls right off.
+// Crack the windshield at (u, v), 0..1. Badly cracked, it shatters but stays in its frame, with its
+// wipers, and paint keeps landing on it.
 export function crackWindshield(car: Car, u: number, v: number, strength = 1) {
   if (share(FX.crackWindshield, crackWindshield, [car, u, v, strength])) return;
   const C = car.glass.shield.crack,
@@ -822,15 +780,17 @@ export function crackWindshield(car: Car, u: number, v: number, strength = 1) {
   if (C.shattered) return;
   drawCrackWeb(g, u * w, v * h, 34 + strength * 30, 1.1 + strength * 0.25);
   C.level = Math.min(1.2, C.level + 0.24 * strength);
-  if (C.level >= 0.42 && !C.shattered) {
-    C.shattered = true;
-    detachWindowPane(car, 'shield');
-  }
+  if (C.level >= 0.42) C.shattered = true;
   C.dirty = true;
   if (G.humans.some((hm) => hm.car === car)) SFX.crack(car.pos, strength);
 }
-export function clearWindshieldCracks(car: Car) {
-  const C = car.glass.shield.crack;
+// A new windscreen: no cracks and no paint (the rear window goes back in too).
+export function fitNewWindshield(car: Car) {
+  const sh = car.glass.shield,
+    C = sh.crack;
+  sh.g.clearRect(0, 0, sh.w, sh.h);
+  sh.cover = 0;
+  sh.dirty = true;
   C.g.clearRect(0, 0, C.cv.width, C.cv.height);
   C.level = 0;
   C.shattered = false;
@@ -838,11 +798,7 @@ export function clearWindshieldCracks(car: Car) {
   C.rearShattered = false;
   C.dirty = true;
   const u = car.glassMat.userData['u'];
-  if (u?.frontGlassOn) u.frontGlassOn.value = 1;
   if (u?.rearGlassOn) u.rearGlassOn.value = 1;
-  car.shieldFilm.visible = true;
-  car.crackFilm.visible = true;
-  for (const arm of car.wiperArms) arm.visible = true;
 }
 
 // Crack a side or rear window (atlas view `reg` at atlas pixel u, v).
@@ -869,13 +825,13 @@ export function crackGlassAt(car: Car, l: { x: number; y: number; z: number }, s
     C.rearLevel = Math.min(1.2, (C.rearLevel ?? 0) + 0.28 * strength);
     if (C.rearLevel >= 0.42) {
       C.rearShattered = true;
-      detachWindowPane(car, 'rear');
+      detachRearWindow(car);
     }
     if (G.humans.some((hm) => hm.car === car)) SFX.crack(car.pos, strength);
   }
 }
 
-// Crashes: knocks crack the glass nearest the hit, and front/rear windows fall off early.
+// Crashes: knocks crack the glass nearest the hit; a smashed rear window falls out early.
 export function crackFromKnock(car: Car, zone: DamageZone | null, cause: DamageCause, dv: number) {
   if (share(FX.crackFromKnock, crackFromKnock, [car, zone, cause, dv])) return;
   if (dv < 3.2 || !car.alive) return;

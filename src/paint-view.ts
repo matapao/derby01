@@ -63,6 +63,63 @@ export function fadeCameraPaint(
   return Math.min(1, cover) * retained;
 }
 
+export type WipeContext = Pick<
+  CanvasRenderingContext2D,
+  | 'save'
+  | 'restore'
+  | 'beginPath'
+  | 'arc'
+  | 'moveTo'
+  | 'closePath'
+  | 'fill'
+  | 'globalCompositeOperation'
+  | 'fillStyle'
+>;
+
+export interface WipedSurface {
+  w: number;
+  h: number;
+  cover: number;
+  wipers: readonly { x: number; y: number; len: number }[];
+}
+
+/**
+ * Windshield paint stays until a blade passes over it. Blades moving from angle `from` to `to` thin
+ * what they sweep by a fifth, a little more in some bands (streaks), so a direct hit takes a few
+ * passes (two seconds or so) to see through. Returns the paint cover left.
+ */
+export function wipeShieldPaint(context: WipeContext, glass: WipedSurface, from: number, to: number): number {
+  if (glass.cover < 0.003) return 0;
+  const lo = Math.min(from, to) + Math.PI,
+    hi = Math.max(from, to) + Math.PI;
+  if (!(hi - lo >= 1e-4)) return glass.cover;
+  context.save();
+  context.globalCompositeOperation = 'destination-out';
+  let area = 0;
+  for (const wp of glass.wipers) {
+    const r0 = wp.len * 0.12;
+    context.beginPath();
+    context.arc(wp.x, wp.y, wp.len, lo, hi);
+    context.arc(wp.x, wp.y, r0, hi, lo, true);
+    context.closePath();
+    context.fillStyle = 'rgba(0,0,0,0.2)';
+    context.fill();
+    // the rubber wipes cleaner in some bands: streaks
+    context.beginPath();
+    for (let r = r0 + 5; r < wp.len - 4; r += 10) {
+      context.moveTo(wp.x + Math.cos(lo) * (r + 5), wp.y + Math.sin(lo) * (r + 5));
+      context.arc(wp.x, wp.y, r + 5, lo, hi);
+      context.arc(wp.x, wp.y, r, hi, lo, true);
+      context.closePath();
+    }
+    context.fillStyle = 'rgba(0,0,0,0.12)';
+    context.fill();
+    area += 0.5 * (wp.len * wp.len - r0 * r0) * (hi - lo);
+  }
+  context.restore();
+  return glass.cover * (1 - 0.22 * Math.min(1, (area * 0.62) / (glass.w * glass.h)));
+}
+
 /** Only a car windshield has cracks or blades. A camera feed can show paint, never glass effects. */
 export function drawPaintLayer(
   context: PaintLayerContext,

@@ -8,7 +8,7 @@ import { requireValue } from '../required-fields.ts';
 import { DETACHABLE } from '../core.ts';
 import { BUMPER_NAMES, dropWheel, refitWheel, setBumperPieces } from '../car.ts';
 import { detachKit } from '../kits.ts';
-import { clearWindshieldCracks } from '../paint.ts';
+import { fitNewWindshield } from '../paint.ts';
 import { knockRadarOff } from '../radar.ts';
 import { fitRadarHead } from '../radar-model.ts';
 import { detachPart } from '../physics.ts';
@@ -156,11 +156,11 @@ export function applyDetail(car: Car, raw: unknown): void {
   else if (!radarOff && car.radar.destroyed) fitRadarHead(car);
   car.radar.hp = num(radar['hp'], 0, 999, car.radar.hp);
 
-  // a new windscreen: the cracks go (the cracks themselves come as effects)
+  // a new windscreen: its cracks and paint go (new ones come as effects)
   const crack = obj(d['crack']),
     C = car.glass.shield.crack;
   const level = num(crack['level'], 0, 1.2, C.level);
-  if (level < C.level - 0.1) clearWindshieldCracks(car);
+  if (level < C.level - 0.1) fitNewWindshield(car);
   C.level = level;
   C.shattered = crack['shattered'] === true;
   car.zoneDmg.front = num(d['front'], 0, 9999, car.zoneDmg.front);

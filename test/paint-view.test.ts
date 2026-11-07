@@ -4,8 +4,10 @@ import {
   drawPaintLayer,
   fadeCameraPaint,
   paintViewSurface,
+  wipeShieldPaint,
   type PaintLayerContext,
   type PaintSurface,
+  type WipeContext,
 } from '../src/paint-view.ts';
 
 interface DrawState {
@@ -28,6 +30,9 @@ type Operation =
       style: DrawState['fillStyle'];
     }
   | { kind: 'path' }
+  | { kind: 'arc'; x: number; y: number; r: number }
+  | { kind: 'close' }
+  | { kind: 'paint'; alpha: number; composite: GlobalCompositeOperation; style: DrawState['fillStyle'] }
   | { kind: 'move'; x: number; y: number }
   | { kind: 'line'; x: number; y: number }
   | { kind: 'stroke'; alpha: number; style: DrawState['strokeStyle']; width: number; cap: CanvasLineCap };
@@ -53,7 +58,7 @@ function canvasTrace() {
       lineCap: context.lineCap,
     };
   }
-  const context: PaintLayerContext = {
+  const context: PaintLayerContext & WipeContext = {
     ...initial,
     save() {
       stack.push(state());
@@ -83,6 +88,20 @@ function canvasTrace() {
     },
     moveTo(x, y) {
       operations.push({ kind: 'move', x, y });
+    },
+    arc(x, y, r) {
+      operations.push({ kind: 'arc', x, y, r });
+    },
+    closePath() {
+      operations.push({ kind: 'close' });
+    },
+    fill() {
+      operations.push({
+        kind: 'paint',
+        alpha: context.globalAlpha,
+        composite: context.globalCompositeOperation,
+        style: context.fillStyle,
+      });
     },
     lineTo(x, y) {
       operations.push({ kind: 'line', x, y });
@@ -240,4 +259,70 @@ test('paused or malformed timing never mutates camera paint; tiny residue clears
   assert.equal(fadeCameraPaint(trace.context, 320, 180, 0.002, 0.1), 0);
   assert.deepEqual(trace.operations, [{ kind: 'clear', bounds: [0, 0, 320, 180] }]);
   trace.assertRestored();
+});
+
+const shieldGlass = (cover: number) => ({
+  w: 448,
+  h: 208,
+  cover,
+  wipers: [
+    { x: 90, y: 214, len: 190 },
+    { x: 270, y: 214, len: 170 },
+  ],
+});
+
+test('windshield paint stays put until a wiper blade sweeps over it', () => {
+  for (const [from, to] of [
+    [2, 2],
+    [2, 2 + 1e-6],
+    [NaN, 2],
+    [2, NaN],
+  ] as const) {
+    const trace = canvasTrace();
+    assert.equal(wipeShieldPaint(trace.context, shieldGlass(0.4), from, to), 0.4);
+    assert.deepEqual(trace.operations, []);
+    trace.assertRestored();
+  }
+  const trace = canvasTrace();
+  assert.equal(wipeShieldPaint(trace.context, { ...shieldGlass(0.4), wipers: [] }, 1.3, 3), 0.4);
+  trace.assertRestored();
+});
+
+test('the wipers only erase the paint they sweep, and one sweep leaves most of it', () => {
+  const trace = canvasTrace();
+  const cover = wipeShieldPaint(trace.context, shieldGlass(0.4), 1.3, 3);
+  assert.ok(cover < 0.4 && cover > 0.3, `${cover} cover left after one sweep`);
+  const paints = trace.operations.filter((operation) => operation.kind === 'paint');
+  assert.equal(paints.length, 4, 'one blade pass and its streaks per wiper');
+  for (const paint of paints) assert.equal(paint.composite, 'destination-out');
+  assert.deepEqual(
+    paints.map((paint) => paint.style),
+    ['rgba(0,0,0,0.2)', 'rgba(0,0,0,0.12)', 'rgba(0,0,0,0.2)', 'rgba(0,0,0,0.12)'],
+  );
+  for (const operation of trace.operations)
+    if (operation.kind === 'arc') assert.ok([90, 270].includes(operation.x) && operation.y === 214);
+  assert.equal(
+    trace.operations.some((operation) => operation.kind === 'fill' || operation.kind === 'clear'),
+    false,
+    'nothing clears the glass outright',
+  );
+  // sweeping back the other way erases the same arc
+  const back = canvasTrace();
+  assert.equal(wipeShieldPaint(back.context, shieldGlass(0.4), 3, 1.3), cover);
+  assert.deepEqual(back.operations, trace.operations);
+  trace.assertRestored();
+  back.assertRestored();
+});
+
+test('a few seconds of wiping thin heavy windshield paint gradually', () => {
+  const trace = canvasTrace();
+  let cover = 0.6;
+  for (let sweep = 0; sweep < 4; sweep++)
+    cover = wipeShieldPaint(trace.context, shieldGlass(cover), sweep % 2 ? 3 : 1.3, sweep % 2 ? 1.3 : 3);
+  assert.ok(cover > 0.3 && cover < 0.6, `${cover} cover left after four sweeps`);
+  const tiny = canvasTrace();
+  assert.equal(wipeShieldPaint(tiny.context, shieldGlass(0.002), 1.3, 3), 0);
+  assert.deepEqual(tiny.operations, []);
+  trace.assertRestored();
+  tiny.assertRestored();
 });
