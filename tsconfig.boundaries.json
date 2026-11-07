@@ -39,6 +39,8 @@
     "test/browser-input-lifecycle.test.ts",
     "src/audio-sample.ts",
     "src/music-settings.ts",
+    "src/random-id.ts",
+    "test/random-id.test.ts",
     "src/music-model.ts",
     "src/music-player.ts",
     "src/music-bridge.ts",
